@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pyTelegramBotAPI = "*"
+requests = "*"
+selenium = "*"
+beautifulsoup4 = "*"
+lxml = "*"
+webdriver-manager = "*"
+pyppeteer = "*"
+
+[dev-packages]
+packaging = "*"
+
+[requires]
+python_version = "3.9"
