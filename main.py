@@ -86,20 +86,17 @@ def generateStatistic():
 +{data['currentWeekProfitPercents']}% | +${currentWeekProfit}
 
 🔹**Ваня: +${calcAnte(currentWeekProfit, IVAN_DEP)}**
-Пополнения: $0
-Снятия: $0
+Депозит: ${IVAN_DEP}
 Текущий баланс: ${calcAnte(balance, IVAN_DEP)}
 Общая прибыль: +${calcAnte(profit, IVAN_DEP)}
 
 🔹**Саня: +${calcAnte(currentWeekProfit, ALEX_DEP)}**
-Пополнения: $0
-Снятия: $0
+Депозит: ${ALEX_DEP}
 Текущий баланс: ${calcAnte(balance, ALEX_DEP)}
 Общая прибыль: +${calcAnte(profit, ALEX_DEP)}
 
 🔹**Ден: +${calcAnte(currentWeekProfit, DENIS_DEP)}**
-Пополнения: $0
-Снятия: $0
+Депозит: ${DENIS_DEP}
 Текущий баланс: ${calcAnte(balance, DENIS_DEP)}
 Общая прибыль: +${calcAnte(profit, DENIS_DEP)}
 
