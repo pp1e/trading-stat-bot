@@ -9,14 +9,17 @@ from bs4 import BeautifulSoup
 from pyppeteer import launch
 import asyncio
 
-
 ALEX_DEP = 753
 IVAN_DEP = 600
 DENIS_DEP = 100
 OVERALL_DEP = ALEX_DEP + IVAN_DEP + DENIS_DEP
 DATA_FILE = 'data.json'
 
-bot = telebot.TeleBot('6511544558:AAGZOxhdStzt6SLpe14FgSPwJ84ncThxqJw')
+with open('BOT_API.txt') as f:
+    bot_api = f.readline()
+    f.close()
+
+bot = telebot.TeleBot(bot_api)
 
 
 def dollarsToNumber(dollars):
@@ -24,7 +27,7 @@ def dollarsToNumber(dollars):
 
 
 def percentsToNumber(percents):
-    return float(percents.replace('+','').replace('%', ''))
+    return float(percents.replace('+', '').replace('%', ''))
 
 
 async def scrapData():
@@ -105,6 +108,7 @@ def generateStatistic():
 [СЛЕДИТЬ](https://fxmonitor.online/u/UQEvKqKD?view=pro)
         """
 
+
 @bot.message_handler(commands=['start'])
 def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -124,23 +128,7 @@ def echo_message(message):
         bot.send_message(message.chat.id, 'Ошибка при извлечении данных! Попробуй еще раз')
 
 
-
-# chromeDriver = ChromeDriverManager().install()
-# print(chromeDriver)
-# service=ChromeService(chromeDriver)
-# print(service)
-# driver = webdriver.Chrome(service=service)
-#
-# driver.get(url)
-# htmlText = driver.page_source
-#
-# print(htmlText)
-# soup = BeautifulSoup(htmlText, 'lxml')
-# print(soup.find('a', id='17542800profit_d'))
-
-#data = asyncio.run(scrapData())
-
-# print(asyncio.run(scrapData()))
-scrapProcess = Process(target=scrapDataProcess)
-scrapProcess.start()
-bot.polling(none_stop=True, interval=0)
+if __name__ == "__main__":
+    scrapProcess = Process(target=scrapDataProcess)
+    scrapProcess.start()
+    bot.polling(none_stop=True, interval=0)
