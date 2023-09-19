@@ -1,4 +1,5 @@
 import sqlite3
+from config.db_config import DB_CONFIG
 
 
 class Database:
@@ -52,4 +53,4 @@ class Database:
         self.conn.commit()
 
 
-database = Database('botDatabase.db')
+database = Database(DB_CONFIG['name'])
