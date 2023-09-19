@@ -17,7 +17,6 @@ DATA_FILE = 'data.json'
 
 with open('BOT_API.txt') as f:
     bot_api = f.readline()
-    f.close()
 
 bot = telebot.TeleBot(bot_api)
 
