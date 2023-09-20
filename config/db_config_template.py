@@ -1,3 +1,3 @@
 DB_CONFIG = {
-  'name': 'bot_database.py',
+  'name': 'database.db',
 }

@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 from pyppeteer import launch
 import asyncio
 import constants
+from database import database
+
 
 
 def dollarsToNumber(dollars):
@@ -40,15 +42,22 @@ async def scrapData():
         "balance": dollarsToNumber(soup.find('a', id='17542800balance').text),
         "profit": dollarsToNumber(soup.find('span', id='17542800profit_total').text),
         "currentWeekProfit": dollarsToNumber(soup.find('span', id='17542800profit_w').text),
-        #"lastWeekProfit": "",
+        # "lastWeekProfit": "",
         "profitPercents": percentsToNumber(soup.find('span', id='17542800profit_w_pr').text),
         "currentWeekProfitPercents": percentsToNumber(soup.find('span', id='17542800profit_w_pr').text),
     }
+
 
 def scrapDataProcess():
     while True:
         with open(constants.DATA_FILE, 'w') as dataFile:
             data = asyncio.run(scrapData())
+            if data:
+                database.database.data_taker(data)
+            else:
+                print("Скрэпи умер")
+            # удалить потом
             dataFile.write(json.dumps(data))
+
         print('Data was scrapped!')
         time.sleep(60)

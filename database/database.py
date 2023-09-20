@@ -1,10 +1,11 @@
 import sqlite3
 from config.db_config import DB_CONFIG
+from datetime import date
 
 
 class Database:
     def __init__(self, db_name):
-        self.conn = sqlite3.connect(db_name)
+        self.conn = sqlite3.connect(db_name, check_same_thread=False)
         self.cursor = self.conn.cursor()
         self.create_tables()
 
@@ -52,5 +53,31 @@ class Database:
 
         self.conn.commit()
 
+    def data_taker(self, data):
+        today = date.today()
+        data = [*data.values()]
+        self.cursor.execute("INSERT OR IGNORE INTO weeks_stats (date, balance, profit, currentWeekProfit, "
+                            "profitPercents, currentWeekProfitPercents) VALUES (?, ?, ?, ?, ?, ?)",
+                            (today, data[0], data[1], data[2], data[3], data[4]))
+        self.conn.commit()
+
+    def add_user(self, username):
+        role = 'noname'
+        deposit = 0
+        self.cursor.execute("INSERT OR IGNORE INTO users_rights (telegram_tag, role, deposit) VALUES (?, ?, ?)",
+                            (username, role, deposit))
+        self.conn.commit()
+
+    def check_rules(self, username):
+        self.cursor.execute("SELECT role FROM users_rights WHERE telegram_tag = ?", (username,))
+        role = self.cursor.fetchone()
+        if role[0] == 'admin':
+            return True
+        else:
+            return False
+    def unique_users(self):
+        self.cursor.execute("SELECT telegram_tag FROM users_rights")
+        users = self.cursor.fetchall()
+        return users
 
 database = Database(DB_CONFIG['name'])

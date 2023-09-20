@@ -2,8 +2,10 @@ import json
 from json import JSONDecodeError
 
 import telebot
+from telebot import types
 
 import constants
+from database import database
 from config.bot_config import BOT_CONFIG
 
 
@@ -51,11 +53,19 @@ def generateStatistic():
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    statBtn = types.KeyboardButton("Посмотреть статистику")
-    markup.add(statBtn)
-    bot.send_message(message.chat.id, "Я робот-долбоеб!🤖", reply_markup=markup)
+    bot.send_message(message.chat.id, 'Приветик!')
+    username = message.from_user.username
+    database.database.add_user(username)
+    button_message(message)
 
+@bot.message_handler(commands=['button'])
+def button_message(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    statButton = types.KeyboardButton("Посмотреть статистику")
+    depositButton = types.KeyboardButton("Внести депозит")
+    markup.add(statButton)
+    markup.add(depositButton)
+    bot.send_message(message.chat.id, "Я робот-подпилоточник!🤖", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: True)
 def echo_message(message):
@@ -66,3 +76,20 @@ def echo_message(message):
             bot.send_message(message.chat.id, 'иди нахуй')
     except JSONDecodeError:
         bot.send_message(message.chat.id, 'Ошибка при извлечении данных! Попробуй еще раз')
+
+    try:
+        if message.text == "Внести депозит":
+            username = message.from_user.username
+            if database.database.check_rules(username):
+                users = database.database.unique_users()
+                deposit_buttons(message, users)
+            else:
+                bot.send_message(message.chat.id, 'ты аришка')
+    except JSONDecodeError:
+        bot.send_message(message.chat.id, 'Ошибка при извлечении данных! Попробуй еще раз')
+@bot.message_handler(content_types='text')
+def deposit_buttons(message, names):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    for name in names:
+        markup.add(types.KeyboardButton(*name))
+    bot.send_message(message.chat.id, 'Кто внес бабло?', reply_markup=markup)
