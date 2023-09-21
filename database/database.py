@@ -62,7 +62,6 @@ class Database:
         self.conn.commit()
 
     def add_user(self, username):
-        print(1)
         role = 'noname'
         deposit = 0
         self.cursor.execute("INSERT OR IGNORE INTO users_rights (telegram_tag, role, deposit) VALUES (?, ?, ?)",
@@ -82,6 +81,11 @@ class Database:
         query_result = self.cursor.fetchall()
         users = [item[0] for item in query_result]
         return users
+
+    def replenishment(self, data):
+        self.cursor.execute("UPDATE users_rights SET deposit = deposit + ? WHERE telegram_tag = ?",
+                            (data[1], data[0]))
+        self.conn.commit()
 
 
 database = Database(DB_CONFIG['name'])

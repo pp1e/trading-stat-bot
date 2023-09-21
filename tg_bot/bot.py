@@ -10,7 +10,13 @@ from config.bot_config import BOT_CONFIG
 
 bot = telebot.TeleBot(BOT_CONFIG['token'])
 users = database.database.fetch_user_tags()
-add_deposit_state = False
+
+select_action = 0
+wait_deposit = 1
+
+user_states = {}
+
+username_pays = ''
 
 
 def calcAnte(balance, dep):
@@ -56,81 +62,73 @@ def generateStatistic():
 def start(message):
     bot.send_message(message.chat.id, 'Приветик!')
     username = message.from_user.username
+    user_states[username] = select_action
     database.database.add_user(username)
     button_message(message)
 
 
 @bot.message_handler(commands=['button'])
 def button_message(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    statButton = types.KeyboardButton("Посмотреть статистику")
-    depositButton = types.KeyboardButton("Внести депозит")
-    markup.add(statButton)
-    markup.add(depositButton)
-    bot.send_message(message.chat.id, "Я робот-подпилоточник!🤖", reply_markup=markup)
-
-
-@bot.message_handler(func=lambda message: message.text == 'Посмотреть статистику')
-def view_statistic(message):
     try:
-        bot.send_message(message.chat.id, generateStatistic(), parse_mode='Markdown')
-    except JSONDecodeError():
-        bot.send_message(message.chat.id, 'Ошибка при извлечении данных! Попробуй еще раз')
-
-
-@bot.message_handler(func=lambda message: message.text == 'Внести депозит')
-def add_deposit(message):
-    try:
-        username = message.from_user.username
-        if database.database.is_user_admin(username):
-            deposit_buttons(message, users)
-            add_deposit_state = True
-        else:
-            bot.send_message(message.chat.id, 'ты аришка')
-
+        markup = types.InlineKeyboardMarkup()
+        stats_button = types.InlineKeyboardButton(text='Посмотреть статистику', callback_data='view_statistic')
+        deposit_button = types.InlineKeyboardButton(text='Внести депозит', callback_data='add_deposit')
+        markup.add(stats_button)
+        markup.add(deposit_button)
+        bot.send_message(message.chat.id, text=
+        "Я робот-подпилоточник!🤖\n Я могу ублажать тебя двумя функциями:", reply_markup=markup)
     except JSONDecodeError:
         bot.send_message(message.chat.id, 'Ошибка при извлечении данных! Попробуй еще раз')
 
 
-@bot.message_handler(func=lambda message: message.text == 'Вернуться назад')
-def to_start(message):
+@bot.callback_query_handler(func=lambda call: True)
+def callback_handler(call):
+    if call.data == 'view_statistic':
+        bot.send_message(call.message.chat.id, generateStatistic(), parse_mode='Markdown')
+    elif call.data == 'add_deposit':
+        username = call.from_user.username
+        if call.data == 'add_deposit':
+            if database.database.is_user_admin(username):
+                deposit_buttons(call.message, users)
+                bot.send_message(call.message.chat.id, 'ты не аришка')
+                user_states[username] = wait_deposit
+            else:
+                bot.send_message(call.message.chat.id, 'ты аришка')
+    elif call.data == 'to_start':
+        button_message(call.message)
+    elif call.data.startswith('select_user'):
+        global username_pays
+        username_pays = call.data.replace('select_user_', '')
+        bot.send_message(call.message.chat.id, f"На сколько пополнил {username_pays}?")
+
+
+@bot.message_handler(func=lambda message: user_states.get(message.from_user.username) == wait_deposit)
+def handler_deposit(message):
     try:
+        deposit_amount = float(message.text)
+        bot.send_message(message.chat.id, f"Пользователь {username_pays} внес {deposit_amount}USD")
+        user_states[message.from_user.username] = select_action
+        deposit_to_database(deposit_amount)
         button_message(message)
-    except JSONDecodeError:
-        bot.send_message(message.chat.id, 'Ошибка при извлечении данных! Попробуй еще раз')
+    except ValueError:
+        bot.send_message(message.chat.id, "Некорректная сумма. Введите число!")
 
 
-@bot.message_handler(func=lambda message: message.text in users)
-def choose_user_refill(message):
-    try:
-        if add_deposit_state:
-            bot.send_message(message.chat.id, 'Сколько?')
-    except JSONDecodeError:
-        bot.send_message(message.chat.id, 'Ошибка при извлечении данных! Попробуй еще раз')
-
-
-@bot.message_handler(func=lambda message: add_deposit_state == False)
+@bot.message_handler(func=lambda message: user_states.get(message.from_user.username) == select_action)
 def echo_message(message):
-    try:
-        bot.send_message(message.chat.id, 'Я тупая аришка. Хозяин еще не научил меня этому :(')
-    except JSONDecodeError:
-        bot.send_message(message.chat.id, 'Ошибка при извлечении данных! Попробуй еще раз')
+    bot.send_message(message.chat.id, 'Я тупая аришка. Хозяин еще не научил меня этому :(')
 
 
 def deposit_buttons(message, names):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
+    markup = types.InlineKeyboardMarkup()
     for name in names:
-        markup.add(types.KeyboardButton(name))
+        callback_data = f'select_user_{name}'
+        markup.add(types.InlineKeyboardButton(text=name, callback_data=callback_data))
 
-    markup.add(types.KeyboardButton("Вернуться назад"))
+    markup.add(types.InlineKeyboardButton(text="Вернуться назад", callback_data='to_start'))
     bot.send_message(message.chat.id, 'Кто внес бабло?', reply_markup=markup)
 
-    deposit(message)
 
-
-def deposit(message):
-    info = [message.text]
-    bot.send_message(message.chat.id, f'Какую сумму внес {message.text}')
-# Почитай
-# https://qaa-engineer.ru/proverka-nazhatiya-inline-knopok-telebot/
+def deposit_to_database(deposit):
+    dep_data = [username_pays, deposit]
+    database.database.replenishment(dep_data)
