@@ -53,11 +53,11 @@ def scrapDataProcess():
         with open(constants.DATA_FILE, 'w') as dataFile:
             data = asyncio.run(scrapData())
             if data:
-                database.database.data_taker(data)
+                database.database.insert_week_profit(data)
+                print('Data was scrapped!')
             else:
-                print("Скрэпи умер")
+                print("Scrapy died!")
             # удалить потом
             dataFile.write(json.dumps(data))
 
-        print('Data was scrapped!')
         time.sleep(60)
