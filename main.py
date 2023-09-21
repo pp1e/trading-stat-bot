@@ -2,6 +2,7 @@ from tg_bot import bot
 from multiprocessing import Process
 from data_scraping import data_scrapper
 
+
 def main():
     tgBot = bot.bot
 
