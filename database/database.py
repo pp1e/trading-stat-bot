@@ -54,14 +54,13 @@ class Database:
 
         self.conn.commit()
 
-    def insert_week_profit(self, data):
-        current_date = date.today()
-        if current_date.weekday() == 6:
-            data = [*data.values()]
-            self.cursor.execute("INSERT OR IGNORE INTO weeks_stats (date, balance, profit, currentWeekProfit, "
-                                "profitPercents, currentWeekProfitPercents) VALUES (?, ?, ?, ?, ?, ?)",
-                                (current_date, data[0], data[1], data[2], data[3], data[4]))
-            self.conn.commit()
+    def insert_week_profit(self, monday_date, overall_balance, overall_profit,
+                           current_week_profit, profit_percents, current_week_profit_percents, user_profits):
+        self.cursor.execute("INSERT OR IGNORE INTO weeks_stats (date, balance, profit, currentWeekProfit, "
+                            "profitPercents, currentWeekProfitPercents, user_part) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                            (monday_date, overall_balance, overall_profit, current_week_profit,
+                             profit_percents, current_week_profit_percents, user_profits))
+        self.conn.commit()
 
     def add_user(self, username):
         role = 'noname'
