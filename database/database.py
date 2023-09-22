@@ -1,6 +1,5 @@
 import datetime
 import sqlite3
-from config.db_config import DB_CONFIG
 from datetime import date
 
 
@@ -120,6 +119,3 @@ class Database:
         self.cursor.execute("SELECT * FROM weeks_stats ORDER BY date DESC LIMIT 1")
         last_row = self.cursor.fetchone()
         return last_row
-
-
-database = Database(DB_CONFIG['name'])
