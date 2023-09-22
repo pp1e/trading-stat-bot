@@ -1,12 +1,9 @@
-import json
-from json import JSONDecodeError
-
 import telebot
 from telebot import types
 
-import constants
 from database import database
 from config.bot_config import BOT_CONFIG
+from message_printer import message_printer
 
 bot = telebot.TeleBot(BOT_CONFIG['token'])
 users = database.database.fetch_user_tags()
@@ -17,45 +14,6 @@ wait_deposit = 1
 user_states = {}
 
 username_pays = ''
-
-
-def calcAnte(balance, dep):
-    return round(balance * (dep / constants.OVERALL_DEP), 2)
-
-
-def generateStatistic():
-    with open(constants.DATA_FILE, 'r') as dataFile:
-        data = json.loads(dataFile.read())
-
-    balance = data['balance']
-    currentWeekProfit = data['currentWeekProfit']
-    profit = data['profit']
-
-    return f"""
-** ТЕКУЩАЯ НЕДЕЛЯ **
-
-**Заработано за неделю:**
-+{data['currentWeekProfitPercents']}% | +${currentWeekProfit}
-
-🔹**Ваня: +${calcAnte(currentWeekProfit, constants.IVAN_DEP)}**
-Депозит: ${constants.IVAN_DEP}
-Текущий баланс: ${calcAnte(balance, constants.IVAN_DEP)}
-Общая прибыль: +${calcAnte(profit, constants.IVAN_DEP)}
-
-🔹**Саня: +${calcAnte(currentWeekProfit, constants.ALEX_DEP)}**
-Депозит: ${constants.ALEX_DEP}
-Текущий баланс: ${calcAnte(balance, constants.ALEX_DEP)}
-Общая прибыль: +${calcAnte(profit, constants.ALEX_DEP)}
-
-🔹**Ден: +${calcAnte(currentWeekProfit, constants.DENIS_DEP)}**
-Депозит: ${constants.DENIS_DEP}
-Текущий баланс: ${calcAnte(balance, constants.DENIS_DEP)}
-Общая прибыль: +${calcAnte(profit, constants.DENIS_DEP)}
-
-**Всего:** ${constants.OVERALL_DEP} -> ${balance}
-
-[СЛЕДИТЬ](https://fxmonitor.online/u/UQEvKqKD?view=pro)
-        """
 
 
 @bot.message_handler(commands=['start'])
@@ -69,27 +27,24 @@ def start(message):
 
 @bot.message_handler(commands=['button'])
 def button_message(message):
-    try:
-        markup = types.InlineKeyboardMarkup()
-        stats_button = types.InlineKeyboardButton(text='Посмотреть статистику', callback_data='view_statistic')
-        deposit_button = types.InlineKeyboardButton(text='Внести депозит', callback_data='add_deposit')
-        markup.add(stats_button)
-        markup.add(deposit_button)
-        bot.send_message(message.chat.id, text=
-        "Я робот-подпилоточник!🤖\n Я могу ублажать тебя двумя функциями:", reply_markup=markup)
-    except JSONDecodeError:
-        bot.send_message(message.chat.id, 'Ошибка при извлечении данных! Попробуй еще раз')
+    markup = types.InlineKeyboardMarkup()
+    stats_button = types.InlineKeyboardButton(text='Посмотреть статистику', callback_data='view_statistic')
+    deposit_button = types.InlineKeyboardButton(text='Внести депозит', callback_data='add_deposit')
+    markup.add(stats_button)
+    markup.add(deposit_button)
+    bot.send_message(message.chat.id, text=
+    "Я робот-подпилоточник!🤖\nЯ могу ублажать тебя двумя функциями:", reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
     if call.data == 'view_statistic':
-        bot.send_message(call.message.chat.id, generateStatistic(), parse_mode='Markdown')
+        bot.send_message(call.message.chat.id, message_printer.print_week_statistic(), parse_mode='Markdown')
     elif call.data == 'add_deposit':
         username = call.from_user.username
         if call.data == 'add_deposit':
             if database.database.is_user_admin(username):
-                deposit_buttons(call.message, users)
+                user_deposits_buttons(call.message, users)
                 bot.send_message(call.message.chat.id, 'ты не аришка')
                 user_states[username] = wait_deposit
             else:
@@ -119,7 +74,7 @@ def echo_message(message):
     bot.send_message(message.chat.id, 'Я тупая аришка. Хозяин еще не научил меня этому :(')
 
 
-def deposit_buttons(message, names):
+def user_deposits_buttons(message, names):
     markup = types.InlineKeyboardMarkup()
     for name in names:
         callback_data = f'select_user_{name}'
