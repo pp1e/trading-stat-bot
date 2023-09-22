@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 from config.db_config import DB_CONFIG
 from datetime import date
@@ -54,12 +55,13 @@ class Database:
         self.conn.commit()
 
     def insert_week_profit(self, data):
-        today = date.today()
-        data = [*data.values()]
-        self.cursor.execute("INSERT OR IGNORE INTO weeks_stats (date, balance, profit, currentWeekProfit, "
-                            "profitPercents, currentWeekProfitPercents) VALUES (?, ?, ?, ?, ?, ?)",
-                            (today, data[0], data[1], data[2], data[3], data[4]))
-        self.conn.commit()
+        current_date = date.today()
+        if current_date.weekday() == 6:
+            data = [*data.values()]
+            self.cursor.execute("INSERT OR IGNORE INTO weeks_stats (date, balance, profit, currentWeekProfit, "
+                                "profitPercents, currentWeekProfitPercents) VALUES (?, ?, ?, ?, ?, ?)",
+                                (current_date, data[0], data[1], data[2], data[3], data[4]))
+            self.conn.commit()
 
     def add_user(self, username):
         role = 'noname'
@@ -86,6 +88,39 @@ class Database:
         self.cursor.execute("UPDATE users_rights SET deposit = deposit + ? WHERE telegram_tag = ?",
                             (data[1], data[0]))
         self.conn.commit()
+
+    def fetch_user_deposits(self):
+        self.cursor.execute("SELECT telegram_tag, deposit FROM users_rights")
+        query_result = self.cursor.fetchall()
+        result_dict = {}
+        for item in query_result:
+            key, value = item
+            result_dict[key] = value
+        return result_dict
+
+    def fetch_week_profit(self):
+        current_date = date.today()
+        self.cursor.execute("SELECT currentWeekProfit FROM weeks_stats WHERE date = ?", (current_date,))
+        query_result = self.cursor.fetchone()
+        week_result = query_result[0]
+        return week_result
+
+    def add_data(self, json_data):
+        current_date = date.today()
+        self.cursor.execute("UPDATE weeks_stats SET user_part = ? WHERE date = ?", (json_data, current_date))
+        self.conn.commit()
+
+    def fetch_previous_week_profits(self):
+        current_day = date.today()
+        previous_sunday = current_day - datetime.timedelta(days=7)
+        self.cursor.execute("SELECT user_part FROM weeks_stats WHERE date = ?", (previous_sunday,))
+        query_result = self.cursor.fetchone()
+        return query_result[0]
+
+    def fetch_last_week_row(self):
+        self.cursor.execute("SELECT * FROM weeks_stats ORDER BY date DESC LIMIT 1")
+        last_row = self.cursor.fetchone()
+        return last_row
 
 
 database = Database(DB_CONFIG['name'])

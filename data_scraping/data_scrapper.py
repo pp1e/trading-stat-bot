@@ -57,7 +57,7 @@ def scrapDataProcess():
                 print('Data was scrapped!')
             else:
                 print("Scrapy died!")
-            # удалить потом
+            # TODO удалить потом
             dataFile.write(json.dumps(data))
 
         time.sleep(60)
