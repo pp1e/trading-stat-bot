@@ -1,15 +1,9 @@
-from datetime import date, datetime
-from incomes_calculations import calc_module
+from datetime import datetime
 from database import database
 import json
 
 
 def print_week_statistic():
-    current_date = date.today()
-
-    if current_date.weekday() == 6:
-        calc_module.calculate_week_statistic()
-
     data = database.database.fetch_last_week_row()
     user_deposits = database.database.fetch_user_deposits()
     week_profit = json.loads(data[6])

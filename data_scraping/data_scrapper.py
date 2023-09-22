@@ -1,12 +1,11 @@
-import json
 import time
 
 from bs4 import BeautifulSoup
 from pyppeteer import launch
 import asyncio
-import constants
 from database import database
-
+from incomes_calculations.calc_module import calculate_week_user_profits
+from utils import is_today_weekends, get_current_monday_date
 
 
 def dollarsToNumber(dollars):
@@ -50,14 +49,21 @@ async def scrapData():
 
 def scrapDataProcess():
     while True:
-        with open(constants.DATA_FILE, 'w') as dataFile:
+        if is_today_weekends():
             data = asyncio.run(scrapData())
             if data:
-                database.database.insert_week_profit(data)
+                data = asyncio.run(scrapData())
+                database.database.insert_week_profit(
+                    monday_date=get_current_monday_date(),
+                    overall_balance=data["balance"],
+                    overall_profit=data["profit"],
+                    current_week_profit=data["currentWeekProfit"],
+                    profit_percents=data["profitPercents"],
+                    current_week_profit_percents=data["currentWeekProfitPercents"],
+                    user_profits=calculate_week_user_profits(data["currentWeekProfit"])
+                )
                 print('Data was scrapped!')
             else:
                 print("Scrapy died!")
-            # TODO удалить потом
-            dataFile.write(json.dumps(data))
 
         time.sleep(60)
