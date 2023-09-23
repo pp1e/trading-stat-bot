@@ -2,6 +2,8 @@ import datetime
 import sqlite3
 from datetime import date
 
+from config.db_config import DB_CONFIG
+
 
 class Database:
     def __init__(self, db_name):
@@ -33,7 +35,8 @@ class Database:
             currentWeekProfit REAL,
             profitPercents REAL, 
             currentWeekProfitPercents REAL,
-            user_part TEXT)
+            user_overall_profits TEXT,
+            user_week_profits TEXT)
             ''')
 
         self.cursor.execute("SELECT name FROM sqlite_master WHERE TYPE = 'table' AND NAME = 'deposits_info';")
@@ -53,12 +56,13 @@ class Database:
 
         self.conn.commit()
 
-    def insert_week_profit(self, monday_date, overall_balance, overall_profit,
-                           current_week_profit, profit_percents, current_week_profit_percents, user_profits):
+    def insert_week_profit(self, monday_date, overall_balance, overall_profit, current_week_profit,
+                           profit_percents, current_week_profit_percents, user_overall_profits, user_week_profits):
         self.cursor.execute("INSERT OR IGNORE INTO weeks_stats (date, balance, profit, currentWeekProfit, "
-                            "profitPercents, currentWeekProfitPercents, user_part) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                            "profitPercents, currentWeekProfitPercents, user_overall_profits, user_week_profits) "
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                             (monday_date, overall_balance, overall_profit, current_week_profit,
-                             profit_percents, current_week_profit_percents, user_profits))
+                             profit_percents, current_week_profit_percents, user_overall_profits, user_week_profits))
         self.conn.commit()
 
     def add_user(self, username):
@@ -105,13 +109,13 @@ class Database:
 
     def add_data(self, json_data):
         current_date = date.today()
-        self.cursor.execute("UPDATE weeks_stats SET user_part = ? WHERE date = ?", (json_data, current_date))
+        self.cursor.execute("UPDATE weeks_stats SET user_overall_profits = ? WHERE date = ?", (json_data, current_date))
         self.conn.commit()
 
-    def fetch_previous_week_profits(self):
+    def fetch_user_overall_profits(self):
         current_day = date.today()
         previous_sunday = current_day - datetime.timedelta(days=7)
-        self.cursor.execute("SELECT user_part FROM weeks_stats WHERE date = ?", (previous_sunday,))
+        self.cursor.execute("SELECT user_overall_profits FROM weeks_stats WHERE date = ?", (previous_sunday,))
         query_result = self.cursor.fetchone()
         return query_result[0]
 
@@ -119,3 +123,6 @@ class Database:
         self.cursor.execute("SELECT * FROM weeks_stats ORDER BY date DESC LIMIT 1")
         last_row = self.cursor.fetchone()
         return last_row
+
+
+database = Database(DB_CONFIG['name'])
