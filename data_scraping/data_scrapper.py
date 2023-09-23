@@ -23,10 +23,8 @@ async def scrapData():
     # # Launch the browser
     browser = await launch()
 
-    print("sc")
     # Open a new browser page
     page = await browser.newPage()
-    print("sc")
 
     # Open our test file in the opened page
     await page.goto(url)
@@ -45,7 +43,7 @@ async def scrapData():
         "profit": dollarsToNumber(soup.find('span', id='17542800profit_total').text),
         "currentWeekProfit": dollarsToNumber(soup.find('span', id='17542800profit_w').text),
         # "lastWeekProfit": "",
-        "profitPercents": percentsToNumber(soup.find('span', id='17542800profit_w_pr').text),
+        "profitPercents": percentsToNumber(soup.find('span', id='17542800profit_total_pr').text),
         "currentWeekProfitPercents": percentsToNumber(soup.find('span', id='17542800profit_w_pr').text),
     }
 
@@ -55,7 +53,7 @@ def scrapDataProcess():
         if is_today_weekends():
             data = asyncio.run(scrapData())
             if data:
-                print(1)
+
                 user_overall_profits, user_week_profits = calculate_week_user_profits(data["currentWeekProfit"])
                 database.database.insert_week_profit(
                     monday_date=get_current_monday_date(),
