@@ -1,3 +1,4 @@
+import json
 import time
 
 from bs4 import BeautifulSoup
@@ -22,8 +23,10 @@ async def scrapData():
     # # Launch the browser
     browser = await launch()
 
+    print("sc")
     # Open a new browser page
     page = await browser.newPage()
+    print("sc")
 
     # Open our test file in the opened page
     await page.goto(url)
@@ -52,7 +55,8 @@ def scrapDataProcess():
         if is_today_weekends():
             data = asyncio.run(scrapData())
             if data:
-                data = asyncio.run(scrapData())
+                print(1)
+                user_overall_profits, user_week_profits = calculate_week_user_profits(data["currentWeekProfit"])
                 database.database.insert_week_profit(
                     monday_date=get_current_monday_date(),
                     overall_balance=data["balance"],
@@ -60,7 +64,8 @@ def scrapDataProcess():
                     current_week_profit=data["currentWeekProfit"],
                     profit_percents=data["profitPercents"],
                     current_week_profit_percents=data["currentWeekProfitPercents"],
-                    user_profits=calculate_week_user_profits(data["currentWeekProfit"])
+                    user_overall_profits=json.dumps(user_overall_profits),
+                    user_week_profits=json.dumps(user_week_profits),
                 )
                 print('Data was scrapped!')
             else:

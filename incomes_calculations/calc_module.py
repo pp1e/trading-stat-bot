@@ -4,21 +4,20 @@ from database import database
 
 def calculate_week_user_profits(week_profit):
     user_deposits = database.database.fetch_user_deposits()
-    previous_week_balance = database.database.fetch_previous_balance()
-    previous_week_balance = json.loads(previous_week_balance)
+    user_overall_profits = database.database.fetch_user_overall_profits()
+    user_overall_profits = json.loads(user_overall_profits)
+    user_week_profits = {}
 
     total_sum = sum(value for value in user_deposits.values())
 
     for user in user_deposits.keys():
         percent_part_of_deposit = user_deposits[user] * 100 / total_sum
+        user_part_of_week_profit = week_profit * percent_part_of_deposit / 100
+        user_week_profits[user] = user_part_of_week_profit
 
-        if user in previous_week_balance.keys():
-            user_part_of_week_profit = week_profit * percent_part_of_deposit / 100
-            previous_week_balance[user] += user_part_of_week_profit
+        if user in user_overall_profits.keys():
+            user_overall_profits[user] =+ user_part_of_week_profit
         else:
-            user_part_of_week_profit = week_profit * percent_part_of_deposit / 100
-            previous_week_balance[user] = user_deposits[user] + user_part_of_week_profit
+            user_overall_profits[user] = user_part_of_week_profit
 
-    json_current_week_balance = json.dumps(previous_week_balance)
-
-    return json_current_week_balance
+    return user_overall_profits, user_week_profits

@@ -6,8 +6,8 @@ from config.db_config import DB_CONFIG
 
 
 def main():
-    data_base = database.Database(DB_CONFIG['name'])
-    tgBot = bot.Bot(data_base).bot
+    # data_base = database.Database(DB_CONFIG['name'])
+    tgBot = bot.Bot(database.database).bot
     scrapProcess = Process(target=data_scrapper.scrapDataProcess)
     scrapProcess.start()
 
