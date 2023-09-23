@@ -16,7 +16,7 @@ def calculate_week_user_profits(week_profit):
         user_week_profits[user] = user_part_of_week_profit
 
         if user in user_overall_profits.keys():
-            user_overall_profits[user] =+ user_part_of_week_profit
+            user_overall_profits[user] += user_part_of_week_profit
         else:
             user_overall_profits[user] = user_part_of_week_profit
 

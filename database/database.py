@@ -3,6 +3,7 @@ import sqlite3
 from datetime import date
 
 from config.db_config import DB_CONFIG
+from utils import get_current_monday_date
 
 
 class Database:
@@ -101,26 +102,27 @@ class Database:
         return result_dict
 
     def fetch_week_profit(self):
-        current_date = date.today()
-        self.cursor.execute("SELECT currentWeekProfit FROM weeks_stats WHERE date = ?", (current_date,))
+        current_week_monday = get_current_monday_date()
+        self.cursor.execute("SELECT currentWeekProfit FROM weeks_stats WHERE date = ?", (current_week_monday,))
         query_result = self.cursor.fetchone()
         week_result = query_result[0]
         return week_result
 
     def add_data(self, json_data):
-        current_date = date.today()
-        self.cursor.execute("UPDATE weeks_stats SET user_overall_profits = ? WHERE date = ?", (json_data, current_date))
+        current_week_monday = get_current_monday_date()
+        self.cursor.execute("UPDATE weeks_stats SET user_overall_profits = ? WHERE date = ?", (json_data, current_week_monday))
         self.conn.commit()
 
     def fetch_user_overall_profits(self):
-        current_day = date.today()
-        previous_sunday = current_day - datetime.timedelta(days=7)
-        self.cursor.execute("SELECT user_overall_profits FROM weeks_stats WHERE date = ?", (previous_sunday,))
+        previous_week_monday = get_current_monday_date() - datetime.timedelta(days=7)
+        self.cursor.execute("SELECT user_overall_profits FROM weeks_stats WHERE date = ?", (previous_week_monday,))
         query_result = self.cursor.fetchone()
         return query_result[0]
 
     def fetch_last_week_row(self):
-        self.cursor.execute("SELECT * FROM weeks_stats ORDER BY date DESC LIMIT 1")
+        current_week_monday = get_current_monday_date()
+        print(current_week_monday)
+        self.cursor.execute("SELECT * FROM weeks_stats WHERE date = ?", (current_week_monday,))
         last_row = self.cursor.fetchone()
         return last_row
 
