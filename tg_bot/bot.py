@@ -1,3 +1,4 @@
+import datetime
 import json
 
 import telebot
@@ -5,6 +6,7 @@ from telebot import types
 
 from config.bot_config import BOT_CONFIG
 from message_printer import message_printer
+import utils
 
 
 select_action = 0
@@ -42,7 +44,12 @@ class TradingStatBot:
         @self.bot.callback_query_handler(func=lambda call: True)
         def callback_handler(call):
             if call.data == 'view_statistic':
-                data = self.database.fetch_last_week_row()
+                current_week_monday = utils.get_current_monday_date()
+                if utils.is_today_weekends():
+                    data = self.database.fetch_week_stat(current_week_monday)
+                else:
+                    data = self.database.fetch_week_stat(current_week_monday - datetime.timedelta(days=7))
+
                 user_deposits = self.database.fetch_user_deposits()
                 message = message_printer.print_week_statistic(
                     date=data[0],
@@ -53,6 +60,7 @@ class TradingStatBot:
                     week_profit=data[3],
                     total_profit=data[1],
                 )
+
                 self.bot.send_message(call.message.chat.id, message, parse_mode='Markdown')
             elif call.data == 'add_deposit':
                 username = call.from_user.username

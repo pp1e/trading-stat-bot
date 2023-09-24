@@ -116,8 +116,7 @@ class Database:
         query_result = self.cursor.fetchone()
         return query_result[0]
 
-    def fetch_last_week_row(self):
-        current_week_monday = get_current_monday_date()
-        self.cursor.execute("SELECT * FROM weeks_stats WHERE date = ?", (current_week_monday,))
+    def fetch_week_stat(self, date):
+        self.cursor.execute("SELECT * FROM weeks_stats WHERE date = ?", (date,))
         last_row = self.cursor.fetchone()
         return last_row
