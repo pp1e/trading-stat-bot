@@ -1,11 +1,4 @@
-import json
-from database import database
-
-
-def calculate_week_user_profits(week_profit):
-    user_deposits = database.database.fetch_user_deposits()
-    user_overall_profits = database.database.fetch_user_overall_profits()
-    user_overall_profits = json.loads(user_overall_profits)
+def calculate_week_user_profits(week_profit, user_deposits, user_overall_profits):
     user_week_profits = {}
 
     total_sum = sum(value for value in user_deposits.values())

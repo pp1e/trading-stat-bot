@@ -1,7 +1,8 @@
+import json
+
 import telebot
 from telebot import types
 
-# from database import database
 from config.bot_config import BOT_CONFIG
 from message_printer import message_printer
 
@@ -14,9 +15,7 @@ user_states = {}
 username_pays = ''
 
 
-class Bot:
-    # bot: telebot.TeleBot = telebot.TeleBot(BOT_CONFIG['token'])
-
+class TradingStatBot:
     def __init__(self, data_base):
         self.database = data_base
         self.users = self.database.fetch_user_tags()
@@ -43,7 +42,18 @@ class Bot:
         @self.bot.callback_query_handler(func=lambda call: True)
         def callback_handler(call):
             if call.data == 'view_statistic':
-                self.bot.send_message(call.message.chat.id, message_printer.print_week_statistic(), parse_mode='Markdown')
+                data = self.database.fetch_last_week_row()
+                user_deposits = self.database.fetch_user_deposits()
+                message = message_printer.print_week_statistic(
+                    date=data[0],
+                    week_profit_percets=data[5],
+                    user_overall_profits=json.loads(data[6]),
+                    user_week_profits = json.loads(data[7]),
+                    user_deposits=user_deposits,
+                    week_profit=data[3],
+                    total_profit=data[1],
+                )
+                self.bot.send_message(call.message.chat.id, message, parse_mode='Markdown')
             elif call.data == 'add_deposit':
                 username = call.from_user.username
                 if call.data == 'add_deposit':
@@ -87,7 +97,3 @@ class Bot:
     def deposit_to_database(self, deposit):
         dep_data = [username_pays, deposit]
         self.database.replenishment(dep_data)
-
-
-# if __name__ == '__main__':
-#     trading_bot = Bot()

@@ -4,7 +4,6 @@ import time
 from bs4 import BeautifulSoup
 from pyppeteer import launch
 import asyncio
-from database import database
 from incomes_calculations.calc_module import calculate_week_user_profits
 from utils import is_today_weekends, get_current_monday_date
 
@@ -42,20 +41,24 @@ async def scrapData():
         "balance": dollarsToNumber(soup.find('a', id='17542800balance').text),
         "profit": dollarsToNumber(soup.find('span', id='17542800profit_total').text),
         "currentWeekProfit": dollarsToNumber(soup.find('span', id='17542800profit_w').text),
-        # "lastWeekProfit": "",
         "profitPercents": percentsToNumber(soup.find('span', id='17542800profit_total_pr').text),
         "currentWeekProfitPercents": percentsToNumber(soup.find('span', id='17542800profit_w_pr').text),
     }
 
 
-def scrapDataProcess():
+def scrapDataProcess(database):
     while True:
         if is_today_weekends():
             data = asyncio.run(scrapData())
             if data:
+                user_deposits = database.fetch_user_deposits()
+                user_overall_profits = database.fetch_user_overall_profits()
+                user_overall_profits = json.loads(user_overall_profits)
+                user_overall_profits, user_week_profits = calculate_week_user_profits(
+                    data["currentWeekProfit"], user_deposits, user_overall_profits
+                )
 
-                user_overall_profits, user_week_profits = calculate_week_user_profits(data["currentWeekProfit"])
-                database.database.insert_week_profit(
+                database.insert_week_profit(
                     monday_date=get_current_monday_date(),
                     overall_balance=data["balance"],
                     overall_profit=data["profit"],
@@ -69,4 +72,4 @@ def scrapDataProcess():
             else:
                 print("Scrapy died!")
 
-        time.sleep(60)
+        time.sleep(600)
