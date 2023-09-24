@@ -6,6 +6,7 @@ from telebot import types
 
 from config.bot_config import BOT_CONFIG
 from message_printer import message_printer
+from constants import SCREENSHOTS_FOLDER
 import utils
 
 
@@ -61,7 +62,12 @@ class TradingStatBot:
                     total_profit=data[1],
                 )
 
-                self.bot.send_message(call.message.chat.id, message, parse_mode='html')
+                self.bot.send_photo(
+                    chat_id=call.message.chat.id,
+                    photo=self.load_screenshot(utils.get_current_monday_date()),
+                    caption=message,
+                    parse_mode='html',
+                )
             elif call.data == 'add_deposit':
                 username = call.from_user.username
                 if call.data == 'add_deposit':
@@ -105,3 +111,7 @@ class TradingStatBot:
     def deposit_to_database(self, deposit):
         dep_data = [username_pays, deposit]
         self.database.replenishment(dep_data)
+
+
+    def load_screenshot(self, screen_date):
+        return open(f'{SCREENSHOTS_FOLDER}/{screen_date}.png', 'rb')

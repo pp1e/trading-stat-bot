@@ -7,6 +7,7 @@ from pyppeteer import launch
 import asyncio
 from incomes_calculations.calc_module import calculate_week_user_profits
 from utils import is_today_weekends, get_current_monday_date
+from constants import SCREENSHOTS_FOLDER
 
 
 def dollarsToNumber(dollars):
@@ -34,6 +35,10 @@ async def scrapData():
 
     # Get page source code
     page_content = await page.content()
+
+    current_week_monday= get_current_monday_date()
+    # Get screenshot of the page
+    await page.screenshot({'path': f'{SCREENSHOTS_FOLDER}/{current_week_monday}.png'})
 
     await browser.close()
 
@@ -74,7 +79,7 @@ def scrapDataProcess(database):
                 else:
                     print("Data was not scrapped :(")
             except Exception as e:
-                traceback.print_exception(e)
+                traceback.print_exc()
                 print("Error while scrapping data!")
 
 
