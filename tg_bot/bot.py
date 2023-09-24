@@ -48,8 +48,16 @@ class TradingStatBot:
                 current_week_monday = utils.get_current_monday_date()
                 if utils.is_today_weekends():
                     data = self.database.fetch_week_stat(current_week_monday)
+                    if data is None:
+                        past_week_monday = current_week_monday - datetime.timedelta(days=7)
+                        data = self.database.fetch_week_stat(past_week_monday)
+                        screenshot = self.load_screenshot(past_week_monday)
+                    else:
+                        screenshot = self.load_screenshot(current_week_monday)
                 else:
-                    data = self.database.fetch_week_stat(current_week_monday - datetime.timedelta(days=7))
+                    past_week_monday = current_week_monday - datetime.timedelta(days=7)
+                    data = self.database.fetch_week_stat(past_week_monday)
+                    screenshot = self.load_screenshot(past_week_monday)
 
                 user_deposits = self.database.fetch_user_deposits()
                 message = message_printer.print_week_statistic(
@@ -64,7 +72,7 @@ class TradingStatBot:
 
                 self.bot.send_photo(
                     chat_id=call.message.chat.id,
-                    photo=self.load_screenshot(utils.get_current_monday_date()),
+                    photo=screenshot,
                     caption=message,
                     parse_mode='html',
                 )
