@@ -1,15 +1,9 @@
 import datetime
-from database import database
-import json
 
 
-def print_week_statistic():
-    data = database.database.fetch_last_week_row()
-    print(data)
-    user_deposits = database.database.fetch_user_deposits()
-    user_overall_profits = json.loads(data[6])
-    user_week_profits = json.loads(data[7])
-    start_week_date = datetime.datetime.strptime(data[0], "%Y-%m-%d")
+def print_week_statistic(date, week_profit_percets, week_profit, total_profit,
+                         user_overall_profits, user_week_profits, user_deposits):
+    start_week_date = datetime.datetime.strptime(date, "%Y-%m-%d")
     end_week_date = start_week_date + datetime.timedelta(days=6)
     start_week_date = start_week_date.strftime("%d.%m.%Y")
     end_week_date = end_week_date.strftime("%d.%m.%Y")
@@ -19,7 +13,7 @@ def print_week_statistic():
 ** Данные за неделю c {start_week_date} по {end_week_date}**
 
 **Заработано за неделю:**
-+{data[5]}% | +${data[3]}
++{week_profit_percets}% | +${week_profit}
 
 🔹**Ваня: +${round(user_week_profits['Ivan92mat'], 2)}**
 Депозит: ${user_deposits['Ivan92mat']}
@@ -36,7 +30,7 @@ def print_week_statistic():
 Текущий баланс: ${round(user_deposits['p_pie'] + user_overall_profits['p_pie'], 2)}
 Общая прибыль: +${round(user_overall_profits['p_pie'], 2)}
 
-**Всего:** ${total_sum} -> ${data[1]}
+**Всего:** ${total_sum} -> ${total_profit}
 
 [СЛЕДИТЬ](https://fxmonitor.online/u/UQEvKqKD?view=pro)
         """

@@ -1,8 +1,5 @@
 import datetime
 import sqlite3
-from datetime import date
-
-from config.db_config import DB_CONFIG
 from utils import get_current_monday_date
 
 
@@ -121,10 +118,6 @@ class Database:
 
     def fetch_last_week_row(self):
         current_week_monday = get_current_monday_date()
-        print(current_week_monday)
         self.cursor.execute("SELECT * FROM weeks_stats WHERE date = ?", (current_week_monday,))
         last_row = self.cursor.fetchone()
         return last_row
-
-
-database = Database(DB_CONFIG['name'])
