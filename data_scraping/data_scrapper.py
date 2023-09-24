@@ -1,5 +1,6 @@
 import json
 import time
+import traceback
 
 from bs4 import BeautifulSoup
 from pyppeteer import launch
@@ -49,27 +50,32 @@ async def scrapData():
 def scrapDataProcess(database):
     while True:
         if is_today_weekends():
-            data = asyncio.run(scrapData())
-            if data:
-                user_deposits = database.fetch_user_deposits()
-                user_overall_profits = database.fetch_user_overall_profits()
-                user_overall_profits = json.loads(user_overall_profits)
-                user_overall_profits, user_week_profits = calculate_week_user_profits(
-                    data["currentWeekProfit"], user_deposits, user_overall_profits
-                )
+            try:
+                data = asyncio.run(scrapData())
+                if data:
+                    user_deposits = database.fetch_user_deposits()
+                    user_overall_profits = database.fetch_user_overall_profits()
+                    user_overall_profits = json.loads(user_overall_profits)
+                    user_overall_profits, user_week_profits = calculate_week_user_profits(
+                        data["currentWeekProfit"], user_deposits, user_overall_profits
+                    )
 
-                database.insert_week_profit(
-                    monday_date=get_current_monday_date(),
-                    overall_balance=data["balance"],
-                    overall_profit=data["profit"],
-                    current_week_profit=data["currentWeekProfit"],
-                    profit_percents=data["profitPercents"],
-                    current_week_profit_percents=data["currentWeekProfitPercents"],
-                    user_overall_profits=json.dumps(user_overall_profits),
-                    user_week_profits=json.dumps(user_week_profits),
-                )
-                print('Data was scrapped!')
-            else:
-                print("Scrapy died!")
+                    database.insert_week_profit(
+                        monday_date=get_current_monday_date(),
+                        overall_balance=data["balance"],
+                        overall_profit=data["profit"],
+                        current_week_profit=data["currentWeekProfit"],
+                        profit_percents=data["profitPercents"],
+                        current_week_profit_percents=data["currentWeekProfitPercents"],
+                        user_overall_profits=json.dumps(user_overall_profits),
+                        user_week_profits=json.dumps(user_week_profits),
+                    )
+                    print('Data was scrapped successfully!')
+                else:
+                    print("Data was not scrapped :(")
+            except Exception as e:
+                traceback.print_exception(e)
+                print("Error while scrapping data!")
+
 
         time.sleep(600)
