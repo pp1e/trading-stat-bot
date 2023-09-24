@@ -9,29 +9,17 @@ def print_week_statistic(date, week_profit_percets, week_profit, total_profit,
     end_week_date = end_week_date.strftime("%d.%m.%Y")
     total_sum = sum(value for value in user_deposits.values())
 
-    message = f"""
-** Данные за неделю c {start_week_date} по {end_week_date}**
+    message = f"Данные за неделю c <b>{start_week_date} по {end_week_date}</b>\n\n"
+    message += "Заработано за неделю:\n"
+    message += f"<b>+{week_profit_percets}% | +${week_profit}</b>\n\n"
 
-**Заработано за неделю:**
-+{week_profit_percets}% | +${week_profit}
+    for userTag in user_week_profits.keys():
+        message += f"🔹<b>{userTag}: +${round(user_week_profits[userTag], 2)}</b>\n"
+        message += f"Депозит: ${user_deposits[userTag]}\n"
+        message += f"Текущий баланс: ${round(user_deposits[userTag] + user_overall_profits[userTag], 2)}\n"
+        message += f"Общая прибыль: +${round(user_overall_profits[userTag], 2)}\n\n"
 
-🔹**Ваня: +${round(user_week_profits['Ivan92mat'], 2)}**
-Депозит: ${user_deposits['Ivan92mat']}
-Текущий баланс: ${round(user_deposits['Ivan92mat'] + user_overall_profits['Ivan92mat'], 2)}
-Общая прибыль: +${round(user_overall_profits['Ivan92mat'], 2)}
+    message += f"<b>Всего:</b> ${total_sum} -> ${total_profit}\n\n"
+    message += '<a href="https://fxmonitor.online/u/UQEvKqKD?view=pro">СЛЕДИТЬ</a>'
 
-🔹**Саня: +${round(user_week_profits['AlexSkvorz'], 2)}**
-Депозит: ${user_deposits['AlexSkvorz']}
-Текущий баланс: ${round(user_deposits['AlexSkvorz'] + user_overall_profits['AlexSkvorz'], 2)}
-Общая прибыль: +${round(user_overall_profits['AlexSkvorz'], 2)}
-
-🔹**Ден: +${round(user_week_profits['p_pie'], 2)}**
-Депозит: ${user_deposits['p_pie']}
-Текущий баланс: ${round(user_deposits['p_pie'] + user_overall_profits['p_pie'], 2)}
-Общая прибыль: +${round(user_overall_profits['p_pie'], 2)}
-
-**Всего:** ${total_sum} -> ${total_profit}
-
-[СЛЕДИТЬ](https://fxmonitor.online/u/UQEvKqKD?view=pro)
-        """
     return message

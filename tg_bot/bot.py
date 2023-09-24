@@ -61,7 +61,7 @@ class TradingStatBot:
                     total_profit=data[1],
                 )
 
-                self.bot.send_message(call.message.chat.id, message, parse_mode='Markdown')
+                self.bot.send_message(call.message.chat.id, message, parse_mode='html')
             elif call.data == 'add_deposit':
                 username = call.from_user.username
                 if call.data == 'add_deposit':
