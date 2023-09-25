@@ -6,9 +6,8 @@ from telebot import types
 
 from config.bot_config import BOT_CONFIG
 from message_printer import message_printer
-from constants import SCREENSHOTS_FOLDER
+from config.storage_config import STORAGE_CONFIG
 import utils
-
 
 select_action = 0
 wait_deposit = 1
@@ -58,13 +57,14 @@ class TradingStatBot:
                     past_week_monday = current_week_monday - datetime.timedelta(days=7)
                     data = self.database.fetch_week_stat(past_week_monday)
                     screenshot = self.load_screenshot(past_week_monday)
+                    print(data)
 
                 user_deposits = self.database.fetch_user_deposits()
                 message = message_printer.print_week_statistic(
                     date=data[0],
                     week_profit_percets=data[5],
                     user_overall_profits=json.loads(data[6]),
-                    user_week_profits = json.loads(data[7]),
+                    user_week_profits=json.loads(data[7]),
                     user_deposits=user_deposits,
                     week_profit=data[3],
                     total_profit=data[1],
@@ -76,6 +76,7 @@ class TradingStatBot:
                     caption=message,
                     parse_mode='html',
                 )
+
             elif call.data == 'add_deposit':
                 username = call.from_user.username
                 if call.data == 'add_deposit':
@@ -120,6 +121,5 @@ class TradingStatBot:
         dep_data = [username_pays, deposit]
         self.database.replenishment(dep_data)
 
-
     def load_screenshot(self, screen_date):
-        return open(f'{SCREENSHOTS_FOLDER}/{screen_date}.png', 'rb')
+        return open(f'{STORAGE_CONFIG["path_to_screens"]}/{screen_date}.png', 'rb')

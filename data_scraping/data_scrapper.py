@@ -5,9 +5,11 @@ import traceback
 from bs4 import BeautifulSoup
 from pyppeteer import launch
 import asyncio
+
+from config.storage_config import STORAGE_CONFIG
 from incomes_calculations.calc_module import calculate_week_user_profits
 from utils import is_today_weekends, get_current_monday_date
-from constants import SCREENSHOTS_FOLDER
+from database.database import Database
 
 
 def dollarsToNumber(dollars):
@@ -36,9 +38,9 @@ async def scrapData():
     # Get page source code
     page_content = await page.content()
 
-    current_week_monday= get_current_monday_date()
+    current_week_monday = get_current_monday_date()
     # Get screenshot of the page
-    await page.screenshot({'path': f'{SCREENSHOTS_FOLDER}/{current_week_monday}.png'})
+    await page.screenshot({'path': f'{STORAGE_CONFIG["path_to_screens"]}/{current_week_monday}.png'})
 
     await browser.close()
 
@@ -52,7 +54,8 @@ async def scrapData():
     }
 
 
-def scrapDataProcess(database):
+def scrapDataProcess():
+    database = Database(STORAGE_CONFIG['name'])
     while True:
         if is_today_weekends():
             try:
@@ -81,6 +84,5 @@ def scrapDataProcess(database):
             except Exception as e:
                 traceback.print_exc()
                 print("Error while scrapping data!")
-
 
         time.sleep(600)
