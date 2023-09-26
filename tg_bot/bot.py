@@ -14,8 +14,6 @@ wait_deposit = 1
 
 user_states = {}
 
-username_pays = ''
-
 
 class TradingStatBot:
     def __init__(self, data_base):
@@ -28,7 +26,7 @@ class TradingStatBot:
             self.bot.send_message(message.chat.id, 'Приветик!')
             username = message.from_user.username
             user_states[username] = select_action
-            self.database.add_user(username)
+            self.database.add_new_user(username)
             button_message(message)
 
         @self.bot.message_handler(commands=['button'])
@@ -81,13 +79,15 @@ class TradingStatBot:
                 username = call.from_user.username
                 if call.data == 'add_deposit':
                     if self.database.is_user_admin(username):
-                        self.user_deposits_buttons(call.message, self.users)
+                        self.create_user_deposits_button(call.message, self.users)
                         self.bot.send_message(call.message.chat.id, 'ты не аришка')
                         user_states[username] = wait_deposit
                     else:
                         self.bot.send_message(call.message.chat.id, 'ты аришка')
+
             elif call.data == 'to_start':
                 button_message(call.message)
+
             elif call.data.startswith('select_user'):
                 global username_pays
                 username_pays = call.data.replace('select_user_', '')
@@ -97,10 +97,15 @@ class TradingStatBot:
         def handler_deposit(message):
             try:
                 deposit_amount = float(message.text)
-                self.bot.send_message(message.chat.id, f"Пользователь {username_pays} внес {deposit_amount}USD")
-                user_states[message.from_user.username] = select_action
-                self.deposit_to_database(deposit_amount)
-                button_message(message)
+
+                if deposit_amount >= 0:
+                    self.bot.send_message(message.chat.id, f"Пользователь {username_pays} внес {deposit_amount}USD")
+                    user_states[message.from_user.username] = select_action
+                    self.send_user_replenishment_to_database(deposit_amount)
+                    button_message(message)
+                else:
+                    self.bot.send_message(message.chat.id, "Сумма пополнения не может быть отрицательной!")
+
             except ValueError:
                 self.bot.send_message(message.chat.id, "Некорректная сумма. Введите число!")
 
@@ -108,7 +113,7 @@ class TradingStatBot:
         def echo_message(message):
             self.bot.send_message(message.chat.id, 'Я тупая аришка. Хозяин еще не научил меня этому :(')
 
-    def user_deposits_buttons(self, message, names):
+    def create_user_deposits_button(self, message, names):
         markup = types.InlineKeyboardMarkup()
         for name in names:
             callback_data = f'select_user_{name}'
@@ -117,9 +122,8 @@ class TradingStatBot:
         markup.add(types.InlineKeyboardButton(text="Вернуться назад", callback_data='to_start'))
         self.bot.send_message(message.chat.id, 'Кто внес бабло?', reply_markup=markup)
 
-    def deposit_to_database(self, deposit):
-        dep_data = [username_pays, deposit]
-        self.database.replenishment(dep_data)
+    def send_user_replenishment_to_database(self, deposit):
+        self.database.replenish_deposit(username_pays, deposit)
 
     def load_screenshot(self, screen_date):
         return open(f'{STORAGE_CONFIG["path_to_screens"]}/{screen_date}.png', 'rb')

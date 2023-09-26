@@ -8,7 +8,7 @@ from config.storage_config import STORAGE_CONFIG
 def main():
     db = Database(STORAGE_CONFIG['name'])
     tgBot = TradingStatBot(db).bot
-    scrapProcess = Process(target=data_scrapper.scrapDataProcess)
+    scrapProcess = Process(target=data_scrapper.scrap_data_process)
     scrapProcess.start()
 
     tgBot.polling(none_stop=True, interval=0)
