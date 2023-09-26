@@ -1,6 +1,7 @@
 import datetime
 import sqlite3
 from utils import get_current_monday_date
+from constants import NONAME_ROLE, USER_ROLE, ADMIN_ROLE
 
 
 class Database:
@@ -63,8 +64,8 @@ class Database:
                              profit_percents, current_week_profit_percents, user_overall_profits, user_week_profits))
         self.conn.commit()
 
-    def add_user(self, username):
-        role = 'noname'
+    def add_new_user(self, username):
+        role = NONAME_ROLE
         deposit = 0
         self.cursor.execute("INSERT OR IGNORE INTO users_rights (telegram_tag, role, deposit) VALUES (?, ?, ?)",
                             (username, role, deposit))
@@ -73,7 +74,7 @@ class Database:
     def is_user_admin(self, username):
         self.cursor.execute("SELECT role FROM users_rights WHERE telegram_tag = ?", (username,))
         role = self.cursor.fetchone()
-        if role[0] == 'admin':
+        if role[0] == ADMIN_ROLE:
             return True
         else:
             return False
@@ -84,9 +85,9 @@ class Database:
         users = [item[0] for item in query_result]
         return users
 
-    def replenishment(self, data):
+    def replenish_deposit(self, username_pays, amount_of_deposit):
         self.cursor.execute("UPDATE users_rights SET deposit = deposit + ? WHERE telegram_tag = ?",
-                            (data[1], data[0]))
+                            (amount_of_deposit, username_pays))
         self.conn.commit()
 
     def fetch_user_deposits(self):
@@ -97,18 +98,6 @@ class Database:
             key, value = item
             result_dict[key] = value
         return result_dict
-
-    def fetch_week_profit(self):
-        current_week_monday = get_current_monday_date()
-        self.cursor.execute("SELECT currentWeekProfit FROM weeks_stats WHERE date = ?", (current_week_monday,))
-        query_result = self.cursor.fetchone()
-        week_result = query_result[0]
-        return week_result
-
-    def add_data(self, json_data):
-        current_week_monday = get_current_monday_date()
-        self.cursor.execute("UPDATE weeks_stats SET user_overall_profits = ? WHERE date = ?", (json_data, current_week_monday))
-        self.conn.commit()
 
     def fetch_user_overall_profits(self):
         previous_week_monday = get_current_monday_date() - datetime.timedelta(days=7)

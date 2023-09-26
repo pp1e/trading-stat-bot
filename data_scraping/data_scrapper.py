@@ -12,15 +12,15 @@ from utils import is_today_weekends, get_current_monday_date
 from database.database import Database
 
 
-def dollarsToNumber(dollars):
+def dollars_to_number(dollars):
     return float(dollars.replace(' ', '').replace('$', '').replace(',', ''))
 
 
-def percentsToNumber(percents):
+def percents_to_number(percents):
     return float(percents.replace('+', '').replace('%', ''))
 
 
-async def scrapData():
+async def scrap_data():
     url = 'https://fxmonitor.online/a/17542800?view=pro&mode=2'
 
     # # Launch the browser
@@ -46,20 +46,20 @@ async def scrapData():
 
     soup = BeautifulSoup(page_content, 'lxml')
     return {
-        "balance": dollarsToNumber(soup.find('a', id='17542800balance').text),
-        "profit": dollarsToNumber(soup.find('span', id='17542800profit_total').text),
-        "currentWeekProfit": dollarsToNumber(soup.find('span', id='17542800profit_w').text),
-        "profitPercents": percentsToNumber(soup.find('span', id='17542800profit_total_pr').text),
-        "currentWeekProfitPercents": percentsToNumber(soup.find('span', id='17542800profit_w_pr').text),
+        "balance": dollars_to_number(soup.find('a', id='17542800balance').text),
+        "profit": dollars_to_number(soup.find('span', id='17542800profit_total').text),
+        "currentWeekProfit": dollars_to_number(soup.find('span', id='17542800profit_w').text),
+        "profitPercents": percents_to_number(soup.find('span', id='17542800profit_total_pr').text),
+        "currentWeekProfitPercents": percents_to_number(soup.find('span', id='17542800profit_w_pr').text),
     }
 
 
-def scrapDataProcess():
+def scrap_data_process():
     database = Database(STORAGE_CONFIG['name'])
     while True:
         if is_today_weekends():
             try:
-                data = asyncio.run(scrapData())
+                data = asyncio.run(scrap_data())
                 if data:
                     user_deposits = database.fetch_user_deposits()
                     user_overall_profits = database.fetch_user_overall_profits()
