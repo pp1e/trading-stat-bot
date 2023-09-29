@@ -65,7 +65,7 @@ def scrap_data_process():
                     user_overall_profits = database.fetch_user_overall_profits()
                     user_overall_profits = json.loads(user_overall_profits)
                     user_overall_profits, user_week_profits = calculate_week_user_profits(
-                        data["currentWeekProfit"], user_deposits, user_overall_profits
+                        data["balance"], user_deposits, user_overall_profits
                     )
 
                     database.insert_week_profit(
