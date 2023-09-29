@@ -23,3 +23,16 @@ def print_week_statistic(date, week_profit_percets, week_profit, total_profit,
     message += '<a href="https://fxmonitor.online/u/UQEvKqKD?view=pro">СЛЕДИТЬ</a>'
 
     return message
+
+
+def print_user_deposits_info(user_deposits):
+    today = datetime.date.today()
+    today = today.strftime("%d.%m.%Y")
+    message = f"Данные на <b>{today}</b>\n\n"
+
+    for user in user_deposits.keys():
+        message += f"🔹<b>{user}: ${user_deposits[user]}</b>\n\n"
+
+    message += '<a href="https://fxmonitor.online/u/UQEvKqKD?view=pro">СЛЕДИТЬ</a>'
+
+    return message

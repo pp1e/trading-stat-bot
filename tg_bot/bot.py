@@ -16,6 +16,7 @@ user_states = {}
 
 username_pays = ''
 
+
 class TradingStatBot:
     def __init__(self, data_base):
         self.database = data_base
@@ -105,6 +106,11 @@ class TradingStatBot:
                 elif self.operation_type == 'withdraw':
                     self.bot.send_message(call.message.chat.id, f"Сколько снял {username_pays}?")
 
+            elif call.data == 'view_user_deposits':
+                user_deposits = self.database.fetch_user_deposits()
+                message = message_printer.print_user_deposits_info(user_deposits)
+                self.bot.send_message(call.message.chat.id, message, parse_mode='html')
+
         @self.bot.message_handler(func=lambda message: user_states.get(message.from_user.username) == wait_deposit)
         def handler_deposit(message):
             try:
@@ -140,7 +146,7 @@ class TradingStatBot:
         if self.operation_type == 'deposit':
             self.bot.send_message(message.chat.id, 'Кто пополнил балик?', reply_markup=markup)
         elif self.operation_type == 'withdraw':
-            self.bot.send_message(message.chat.id,'Кто снял деньги?', reply_markup=markup)
+            self.bot.send_message(message.chat.id, 'Кто снял деньги?', reply_markup=markup)
 
     def send_user_replenishment_to_database(self, deposit):
         self.database.replenish_deposit(username_pays, deposit)
