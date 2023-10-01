@@ -34,7 +34,7 @@ async def scrap_data():
     await page.goto(url)
 
     # Wait for all dynamic data to load
-    time.sleep(1)
+    time.sleep(10)
 
     # Get page source code
     page_content = await page.content()
