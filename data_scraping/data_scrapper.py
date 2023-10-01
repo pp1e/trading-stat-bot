@@ -25,8 +25,7 @@ async def scrap_data():
     url = 'https://fxmonitor.online/a/17542800?view=pro&mode=2'
 
     # # Launch the browser
-    # browser = await launch()
-    browser = await launch(executablePath='/usr/bin/google-chrome')
+    browser = await launch()
 
     # Open a new browser page
     page = await browser.newPage()
