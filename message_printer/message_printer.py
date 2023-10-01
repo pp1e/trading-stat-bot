@@ -1,38 +1,40 @@
 import datetime
 
 
-def print_week_statistic(date, week_profit_percets, week_profit, total_profit,
-                         user_overall_profits, user_week_profits, user_deposits):
+def print_week_statistic(date, week_profit_percents, week_profit, overall_balance, overall_profit,
+                         user_overall_profits, user_week_profits, user_balances):
     start_week_date = datetime.datetime.strptime(date, "%Y-%m-%d")
     end_week_date = start_week_date + datetime.timedelta(days=6)
     start_week_date = start_week_date.strftime("%d.%m.%Y")
     end_week_date = end_week_date.strftime("%d.%m.%Y")
-    total_sum = sum(value for value in user_deposits.values())
+    total_sum = sum(value for value in user_balances.values())
 
     message = f"Данные за неделю c <b>{start_week_date} по {end_week_date}</b>\n\n"
     message += "Заработано за неделю:\n"
-    message += f"<b>+{week_profit_percets}% | +${week_profit}</b>\n\n"
+    message += f"<b>+{week_profit_percents}% | +${week_profit}</b>\n\n"
 
     for userTag in user_week_profits.keys():
+        user_balance = user_balances[userTag]
+        user_overall_profit = user_overall_profits[userTag]
         message += f"🔹<b>{userTag}: +${round(user_week_profits[userTag], 2)}</b>\n"
-        message += f"Депозит: ${user_deposits[userTag]}\n"
-        message += f"Текущий баланс: ${round(user_deposits[userTag] + user_overall_profits[userTag], 2)}\n"
-        message += f"Общая прибыль: +${round(user_overall_profits[userTag], 2)}\n\n"
+        message += f"Депозит: ${round(user_balance - user_overall_profit)}\n"
+        # TODO нужно ли здесь вообще показывать депозит???
+        message += f"Текущий баланс: ${round(user_balance, 2)}\n"
+        message += f"Общая прибыль: +${round(user_overall_profit, 2)}\n\n"
 
-    message += f"<b>Всего:</b> ${total_sum} -> ${total_profit}\n\n"
+    message += f"<b>Всего:</b> ${round(overall_balance - overall_profit, 2)} -> ${round(overall_balance, 2)}\n"
+    message += f"<b>Прибыль:</b> ${round(overall_profit, 2)}\n\n"
     message += '<a href="https://fxmonitor.online/u/UQEvKqKD?view=pro">СЛЕДИТЬ</a>'
 
     return message
 
 
-def print_user_deposits_info(user_deposits):
+def print_user_balances_info(user_balances):
     today = datetime.date.today()
     today = today.strftime("%d.%m.%Y")
     message = f"Данные на <b>{today}</b>\n\n"
 
-    for user in user_deposits.keys():
-        message += f"🔹<b>{user}: ${user_deposits[user]}</b>\n\n"
-
-    message += '<a href="https://fxmonitor.online/u/UQEvKqKD?view=pro">СЛЕДИТЬ</a>'
+    for user in user_balances.keys():
+        message += f"🔹<b>Баланс {user}: ${user_balances[user]}</b>\n\n"
 
     return message

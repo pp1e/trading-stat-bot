@@ -6,9 +6,10 @@ from bs4 import BeautifulSoup
 from pyppeteer import launch
 import asyncio
 
+import utils
 from config.storage_config import STORAGE_CONFIG
 from incomes_calculations.calc_module import calculate_week_user_profits
-from utils import is_today_weekends, get_current_monday_date
+from utils import is_today_weekends, get_current_week_monday
 from database.database import Database
 
 
@@ -24,7 +25,8 @@ async def scrap_data():
     url = 'https://fxmonitor.online/a/17542800?view=pro&mode=2'
 
     # # Launch the browser
-    browser = await launch()
+    # browser = await launch()
+    browser = await launch(executablePath='/usr/bin/google-chrome')
 
     # Open a new browser page
     page = await browser.newPage()
@@ -38,7 +40,7 @@ async def scrap_data():
     # Get page source code
     page_content = await page.content()
 
-    current_week_monday = get_current_monday_date()
+    current_week_monday = get_current_week_monday()
     # Get screenshot of the page
     await page.screenshot({'path': f'{STORAGE_CONFIG["path_to_screens"]}/{current_week_monday}.png'})
 
@@ -46,11 +48,11 @@ async def scrap_data():
 
     soup = BeautifulSoup(page_content, 'lxml')
     return {
-        "balance": dollars_to_number(soup.find('a', id='17542800balance').text),
+        "overall_balance": dollars_to_number(soup.find('a', id='17542800balance').text),
         "profit": dollars_to_number(soup.find('span', id='17542800profit_total').text),
-        "currentWeekProfit": dollars_to_number(soup.find('span', id='17542800profit_w').text),
-        "profitPercents": percents_to_number(soup.find('span', id='17542800profit_total_pr').text),
-        "currentWeekProfitPercents": percents_to_number(soup.find('span', id='17542800profit_w_pr').text),
+        "current_week_profit": dollars_to_number(soup.find('span', id='17542800profit_w').text),
+        "profit_percents": percents_to_number(soup.find('span', id='17542800profit_total_pr').text),
+        "current_week_profit_percents": percents_to_number(soup.find('span', id='17542800profit_w_pr').text),
     }
 
 
@@ -61,23 +63,34 @@ def scrap_data_process():
             try:
                 data = asyncio.run(scrap_data())
                 if data:
-                    user_deposits = database.fetch_user_deposits()
-                    user_overall_profits = database.fetch_user_overall_profits()
-                    user_overall_profits = json.loads(user_overall_profits)
+                    overall_balance = data["overall_balance"]
+
+                    user_balances = database.fetch_user_balances()
+                    last_week_stat = database.fetch_week_stat(utils.get_last_week_monday())
+
                     user_overall_profits, user_week_profits = calculate_week_user_profits(
-                        data["balance"], user_deposits, user_overall_profits
+                        actual_overall_balance=overall_balance,
+                        last_week_overall_balance=last_week_stat[1],
+                        user_balances=user_balances,
+                        last_week_user_overall_profits=json.loads(last_week_stat[6]),
                     )
 
-                    database.insert_week_profit(
-                        monday_date=get_current_monday_date(),
-                        overall_balance=data["balance"],
-                        overall_profit=data["profit"],
-                        current_week_profit=data["currentWeekProfit"],
-                        profit_percents=data["profitPercents"],
-                        current_week_profit_percents=data["currentWeekProfitPercents"],
-                        user_overall_profits=json.dumps(user_overall_profits),
-                        user_week_profits=json.dumps(user_week_profits),
-                    )
+                    is_current_week_stat_not_in_db = database.fetch_week_stat(utils.get_current_week_monday()) is None
+
+                    if is_current_week_stat_not_in_db:
+                        database.insert_week_profit(
+                            monday_date=get_current_week_monday(),
+                            overall_balance=overall_balance,
+                            overall_profit=data["profit"],
+                            current_week_profit=data["current_week_profit"],
+                            profit_percents=data["profit_percents"],
+                            current_week_profit_percents=data["current_week_profit_percents"],
+                            user_overall_profits=json.dumps(user_overall_profits),
+                            user_week_profits=json.dumps(user_week_profits),
+                        )
+                        for user_tag, user_week_profit in user_week_profits.items():
+                            database.update_balance(user_tag, user_week_profit)
+
                     print('Data was scrapped successfully!')
                 else:
                     print("Data was not scrapped :(")

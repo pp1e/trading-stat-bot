@@ -47,29 +47,30 @@ class TradingStatBot:
         @self.bot.callback_query_handler(func=lambda call: True)
         def callback_handler(call):
             if call.data == 'view_statistic':
-                current_week_monday = utils.get_current_monday_date()
+                current_week_monday = utils.get_current_week_monday()
                 if utils.is_today_weekends():
                     data = self.database.fetch_week_stat(current_week_monday)
                     if data is None:
-                        past_week_monday = current_week_monday - datetime.timedelta(days=7)
-                        data = self.database.fetch_week_stat(past_week_monday)
-                        screenshot = self.load_screenshot(past_week_monday)
+                        last_week_monday = utils.get_last_week_monday()
+                        data = self.database.fetch_week_stat(last_week_monday)
+                        screenshot = self.load_screenshot(last_week_monday)
                     else:
                         screenshot = self.load_screenshot(current_week_monday)
                 else:
-                    past_week_monday = current_week_monday - datetime.timedelta(days=7)
-                    data = self.database.fetch_week_stat(past_week_monday)
-                    screenshot = self.load_screenshot(past_week_monday)
+                    last_week_monday = utils.get_last_week_monday()
+                    data = self.database.fetch_week_stat(last_week_monday)
+                    screenshot = self.load_screenshot(last_week_monday)
 
-                user_deposits = self.database.fetch_user_deposits()
+                user_balances = self.database.fetch_user_balances()
                 message = message_printer.print_week_statistic(
                     date=data[0],
-                    week_profit_percets=data[5],
+                    week_profit_percents=data[5],
                     user_overall_profits=json.loads(data[6]),
                     user_week_profits=json.loads(data[7]),
-                    user_deposits=user_deposits,
+                    user_balances=user_balances,
                     week_profit=data[3],
-                    total_profit=data[1],
+                    overall_balance=data[1],
+                    overall_profit=data[2],
                 )
 
                 self.bot.send_photo(
@@ -108,8 +109,8 @@ class TradingStatBot:
                     self.bot.send_message(call.message.chat.id, f"Сколько снял {username_pays}?")
 
             elif call.data == 'view_user_deposits':
-                user_deposits = self.database.fetch_user_deposits()
-                message = message_printer.print_user_deposits_info(user_deposits)
+                user_balances = self.database.fetch_user_balances()
+                message = message_printer.print_user_balances_info(user_balances)
                 self.bot.send_message(call.message.chat.id, message, parse_mode='html')
 
         @self.bot.message_handler(func=lambda message: user_states.get(message.from_user.username) == wait_deposit)
@@ -121,11 +122,11 @@ class TradingStatBot:
                     if self.operation_type == 'deposit':
                         self.bot.send_message(message.chat.id, f"Пользователь {username_pays} "
                                                                f"внес {deposit_amount}USD")
-                        self.send_user_replenishment_to_database(deposit_amount)
+                        self.database.update_balance(username_pays, deposit_amount)
                     elif self.operation_type == 'withdraw':
                         self.bot.send_message(message.chat.id, f"Пользователь {username_pays} "
                                                                f"снял {deposit_amount}USD")
-                        self.send_user_replenishment_to_database(-deposit_amount)
+                        self.database.update_balance(username_pays, -deposit_amount)
                 else:
                     self.bot.send_message(message.chat.id, "Сумма не может быть отрицательной!")
                 button_message(message)
@@ -149,9 +150,6 @@ class TradingStatBot:
         elif self.operation_type == 'withdraw':
             self.bot.send_message(message.chat.id, 'Кто снял деньги?', reply_markup=markup)
 
-    def send_user_replenishment_to_database(self, deposit):
-        self.database.replenish_deposit(username_pays, deposit)
-
     def load_screenshot(self, screen_date):
         return open(f'{STORAGE_CONFIG["path_to_screens"]}/{screen_date}.png', 'rb')
 
@@ -159,7 +157,7 @@ class TradingStatBot:
         markup = types.InlineKeyboardMarkup()
         add_deposit_button = types.InlineKeyboardButton(text='Пополнить баланс', callback_data='add_deposit')
         withdraw_money_button = types.InlineKeyboardButton(text='Снять деньги', callback_data='withdraw_money')
-        view_user_deposits = types.InlineKeyboardButton(text='Посмотреть информацию о депозитах',
+        view_user_deposits = types.InlineKeyboardButton(text='Посмотреть информацию о балансах',
                                                         callback_data='view_user_deposits')
         markup.add(add_deposit_button)
         markup.add(withdraw_money_button)
