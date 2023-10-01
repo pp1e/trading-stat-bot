@@ -40,8 +40,9 @@ class TradingStatBot:
                                                                       callback_data='interact_with_deposit')
             markup.add(stats_button)
             markup.add(interact_with_deposit_button)
-            self.bot.send_message(message.chat.id, text=
-            "Я робот-подпилоточник!🤖\nЯ могу ублажать тебя двумя функциями:", reply_markup=markup)
+            self.bot.send_message(message.chat.id,
+                                  text="Я робот-подпилоточник!🤖\nЯ могу ублажать тебя двумя функциями:",
+                                  reply_markup=markup)
 
         @self.bot.callback_query_handler(func=lambda call: True)
         def callback_handler(call):

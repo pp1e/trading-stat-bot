@@ -7,11 +7,11 @@ from config.storage_config import STORAGE_CONFIG
 
 def main():
     db = Database(STORAGE_CONFIG['name'])
-    tgBot = TradingStatBot(db).bot
-    scrapProcess = Process(target=data_scrapper.scrap_data_process)
-    scrapProcess.start()
+    tg_bot = TradingStatBot(db).bot
+    scrap_process = Process(target=data_scrapper.scrap_data_process)
+    scrap_process.start()
 
-    tgBot.polling(none_stop=True, interval=0)
+    tg_bot.polling(none_stop=True, interval=0)
 
 
 if __name__ == "__main__":

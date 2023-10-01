@@ -81,7 +81,7 @@ def scrap_data_process():
                     print('Data was scrapped successfully!')
                 else:
                     print("Data was not scrapped :(")
-            except Exception as e:
+            except Exception:
                 traceback.print_exc()
                 print("Error while scrapping data!")
 
