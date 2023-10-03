@@ -44,7 +44,7 @@ class TradingStatBot:
         def to_start_callback(call):
             self.handle_to_start(call)
 
-        @self.bot.callback_query_handler(func=lambda call: call.data == 'select_user')
+        @self.bot.callback_query_handler(func=lambda call: call.data.startswith('select_user'))
         def select_user_callback(call):
             self.handle_select_user(call)
 
@@ -56,8 +56,7 @@ class TradingStatBot:
         def deposit_callback(message):
             self.handle_deposit(message)
 
-        @self.bot.message_handler(
-            func=lambda message: self.user_states.get(message.from_user.username) == SELECT_ACTION)
+        @self.bot.message_handler(func=lambda message: self.user_states.get(message.from_user.username) == SELECT_ACTION)
         def echo_message_callback(message):
             self.handle_echo_message(message)
 
@@ -133,6 +132,7 @@ class TradingStatBot:
         user_balances = self.database.fetch_user_balances()
         message = message_printer.print_user_balances_info(user_balances)
         self.bot.send_message(call.message.chat.id, message, parse_mode='html')
+        self.send_welcome_message(call.message)
 
     def handle_deposit(self, message):
         try:
