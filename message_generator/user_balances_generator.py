@@ -1,7 +1,7 @@
 import datetime
 
 
-def formation_of_user_balances_info(user_balances):
+def form_user_balances_info(user_balances):
     today = datetime.date.today()
     today = today.strftime("%d.%m.%Y")
     message = f"Данные на <b>{today}</b>\n\n"

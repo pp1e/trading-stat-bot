@@ -1,8 +1,8 @@
 import datetime
 
 
-def formation_of_week_statistic(date, week_profit_percents, week_profit, overall_balance, overall_profit,
-                                user_overall_profits, user_week_profits, user_balances):
+def form_week_statistic(date, week_profit_percents, week_profit, overall_balance, overall_profit,
+                        user_overall_profits, user_week_profits, user_balances):
     start_week_date = datetime.datetime.strptime(date, "%Y-%m-%d")
     end_week_date = start_week_date + datetime.timedelta(days=6)
     start_week_date = start_week_date.strftime("%d.%m.%Y")
