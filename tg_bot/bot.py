@@ -84,7 +84,7 @@ class TradingStatBot:
 
     def handle_view_statistic(self, call):
         data, screenshot, user_balances = self.get_week_statistic()
-        message = week_statistic_generator.formation_of_week_statistic(
+        message = week_statistic_generator.form_week_statistic(
             date=data[0],
             week_profit_percents=data[5],
             user_overall_profits=json.loads(data[6]),
@@ -131,7 +131,7 @@ class TradingStatBot:
 
     def handle_view_user_deposits(self, call):
         user_balances = self.database.fetch_user_balances()
-        message = user_balances_generator.formation_of_user_balances_info(user_balances)
+        message = user_balances_generator.form_user_balances_info(user_balances)
         self.bot.send_message(call.message.chat.id, message, parse_mode='html')
         self.send_welcome_message(call.message)
 
