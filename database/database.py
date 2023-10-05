@@ -1,6 +1,4 @@
-import datetime
 import sqlite3
-from utils import get_current_week_monday
 from constants import NONAME_ROLE, USER_ROLE, ADMIN_ROLE
 
 
@@ -103,3 +101,9 @@ class Database:
         self.cursor.execute("SELECT * FROM weeks_stats WHERE date = ?", (date,))
         last_row = self.cursor.fetchone()
         return last_row
+
+    def fetch_number_of_week(self):
+        self.cursor.execute("SELECT COUNT(*) FROM weeks_stats")
+        number_of_week = self.cursor.fetchone()[0] - 1
+        print(number_of_week)
+        return number_of_week

@@ -83,7 +83,7 @@ class TradingStatBot:
         self.send_welcome_message(message)
 
     def handle_view_statistic(self, call):
-        data, screenshot, user_balances = self.get_week_statistic()
+        data, screenshot, user_balances, number_of_week = self.get_week_statistic()
         message = week_statistic_generator.form_week_statistic(
             date=data[0],
             week_profit_percents=data[5],
@@ -93,6 +93,7 @@ class TradingStatBot:
             week_profit=data[3],
             overall_balance=data[1],
             overall_profit=data[2],
+            number_of_week=number_of_week,
         )
 
         self.bot.send_photo(
@@ -195,8 +196,9 @@ class TradingStatBot:
             screenshot = self.load_screenshot(last_week_monday)
 
         user_balances = self.database.fetch_user_balances()
+        number_of_week = self.database.fetch_number_of_week()
 
-        return data, screenshot, user_balances
+        return data, screenshot, user_balances, number_of_week
 
     def create_user_deposits_button(self, message, names):
         markup = types.InlineKeyboardMarkup()
