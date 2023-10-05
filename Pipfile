@@ -11,6 +11,7 @@ beautifulsoup4 = "*"
 lxml = "*"
 webdriver-manager = "*"
 pyppeteer = "*"
+num2words = "*"
 
 [dev-packages]
 packaging = "*"

@@ -1,14 +1,14 @@
 import datetime
+from num2words import num2words
 
 
 def form_week_statistic(date, week_profit_percents, week_profit, overall_balance, overall_profit,
-                        user_overall_profits, user_week_profits, user_balances):
-    start_week_date = datetime.datetime.strptime(date, "%Y-%m-%d")
-    end_week_date = start_week_date + datetime.timedelta(days=6)
-    start_week_date = start_week_date.strftime("%d.%m.%Y")
-    end_week_date = end_week_date.strftime("%d.%m.%Y")
+                        user_overall_profits, user_week_profits, user_balances, number_of_week):
 
-    message = f"Данные за неделю c <b>{start_week_date} по {end_week_date}</b>\n\n"
+    rus_start_week_date, rus_end_week_date, rus_number_of_week = form_data_to_russian_style(date, number_of_week)
+
+    message = f"<b>{rus_number_of_week} НЕДЕЛЯ </b> \n\n"
+    message += f"Данные за неделю c <b>{rus_start_week_date} по {rus_end_week_date}</b>\n\n"
     message += "Заработано за неделю:\n"
     message += f"<b>+{week_profit_percents}% | +${week_profit}</b>\n\n"
 
@@ -16,8 +16,6 @@ def form_week_statistic(date, week_profit_percents, week_profit, overall_balance
         user_balance = user_balances[userTag]
         user_overall_profit = user_overall_profits[userTag]
         message += f"🔹<b>{userTag}: +${round(user_week_profits[userTag], 2)}</b>\n"
-        message += f"Депозит: ${round(user_balance - user_overall_profit)}\n"
-        # TODO нужно ли здесь вообще показывать депозит???
         message += f"Текущий баланс: ${round(user_balance, 2)}\n"
         message += f"Общая прибыль: +${round(user_overall_profit, 2)}\n\n"
 
@@ -26,3 +24,15 @@ def form_week_statistic(date, week_profit_percents, week_profit, overall_balance
     message += '<a href="https://fxmonitor.online/u/UQEvKqKD?view=pro">СЛЕДИТЬ</a>'
 
     return message
+
+
+def form_data_to_russian_style(date, number_of_week):
+    start_week_date = datetime.datetime.strptime(date, "%Y-%m-%d")
+    end_week_date = start_week_date + datetime.timedelta(days=6)
+    start_week_date = start_week_date.strftime("%d.%m.%Y")
+    end_week_date = end_week_date.strftime("%d.%m.%Y")
+
+    number_of_week = num2words(number_of_week, to='ordinal', lang='ru').upper()
+    female_number_of_week = number_of_week[:-2] + 'АЯ'
+
+    return start_week_date, end_week_date, female_number_of_week
