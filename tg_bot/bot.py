@@ -29,6 +29,7 @@ class TradingStatBot:
         self.operation_type = None
         self.username_pays = ''
         self.user_states = {}
+        self.username = ''
 
         self.initialize_handlers()
 
@@ -47,11 +48,13 @@ class TradingStatBot:
 
         @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_ADD_DEPOSIT)
         def add_deposit_callback(call):
-            self.handle_add_deposit(call)
+            self.operation_type = DEPOSIT_ACTION
+            self.handle_add_or_withdraw_deposit(call)
 
         @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_WITHDRAW_MONEY)
         def withdraw_money_callback(call):
-            self.handle_withdraw_money(call)
+            self.operation_type = WITHDRAW_ACTION
+            self.handle_add_or_withdraw_deposit(call)
 
         @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_TO_START)
         def to_start_callback(call):
@@ -65,20 +68,20 @@ class TradingStatBot:
         def view_user_deposits_callback(call):
             self.handle_view_user_deposits(call)
 
-        @self.bot.message_handler(func=lambda message: self.user_states.get(message.from_user.username) == WAIT_DEPOSIT)
+        @self.bot.message_handler(func=lambda message: self.user_states.get(self.username) == WAIT_DEPOSIT)
         def deposit_callback(message):
             self.handle_deposit(message)
 
         @self.bot.message_handler(
-            func=lambda message: self.user_states.get(message.from_user.username) == SELECT_ACTION)
+            func=lambda message: self.user_states.get(self.username) == SELECT_ACTION)
         def echo_message_callback(message):
             self.handle_echo_message(message)
 
     def handle_start_command(self, message):
         self.bot.send_message(message.chat.id, 'Приветик!')
-        username = message.from_user.username
-        self.user_states[username] = SELECT_ACTION
-        self.database.add_new_user(username)
+        self.username = message.from_user.username
+        self.user_states[self.username] = SELECT_ACTION
+        self.database.add_new_user(self.username)
         self.send_welcome_message(message)
 
     def handle_interact_with_deposit(self, call):
@@ -92,13 +95,12 @@ class TradingStatBot:
             }
             markup = self.create_buttons(button_parameters)
             self.bot.send_message(call.message.chat.id, 'Я могу выполнить эти функции', reply_markup=markup)
-            self.user_states[username] = WAIT_DEPOSIT
             self.bot.send_message(call.message.chat.id, 'У вас есть права для изменения данных')
         else:
             self.bot.send_message(call.message.chat.id, 'У вас нет прав для этих действий')
 
-    def handle_add_deposit(self, call):
-        self.operation_type = DEPOSIT_ACTION
+    def handle_add_or_withdraw_deposit(self, call):
+        self.user_states[self.username] = WAIT_DEPOSIT
 
         button_parameters = {}
 
@@ -110,22 +112,13 @@ class TradingStatBot:
 
         markup = self.create_buttons(button_parameters)
 
-        self.bot.send_message(call.message.chat.id, 'Кто пополнил балик?', reply_markup=markup)
-
-    def handle_withdraw_money(self, call):
-        button_parameters = {}
-
-        for name in self.users:
-            callback_data = f'select_user_{name}'
-            button_parameters[name] = callback_data
-
-        button_parameters['Вернуться назад'] = COMMAND_TO_START
-
-        markup = self.create_buttons(button_parameters)
-
-        self.bot.send_message(call.message.chat.id, 'Кто снял деньги?', reply_markup=markup)
+        if self.operation_type == DEPOSIT_ACTION:
+            self.bot.send_message(call.message.chat.id, 'Кто пополнил балик?', reply_markup=markup)
+        else:
+            self.bot.send_message(call.message.chat.id, 'Кто снял деньги?', reply_markup=markup)
 
     def handle_to_start(self, call):
+        self.user_states[self.username] = SELECT_ACTION
         self.send_welcome_message(call.message)
 
     def handle_select_user(self, call):
@@ -156,6 +149,8 @@ class TradingStatBot:
                     self.database.update_balance(self.username_pays, -deposit_amount)
             else:
                 self.bot.send_message(message.chat.id, "Сумма не может быть отрицательной!")
+
+            self.user_states[self.username] = SELECT_ACTION
 
             self.send_welcome_message(message)
         except ValueError:
