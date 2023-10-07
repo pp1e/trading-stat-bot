@@ -84,7 +84,14 @@ class TradingStatBot:
     def handle_interact_with_deposit(self, call):
         username = call.from_user.username
         if self.database.is_user_admin(username):
-            self.create_actions_with_deposit(call.message)
+            button_parameters = {
+                'Пополнить баланс': COMMAND_ADD_DEPOSIT,
+                'Снять деньги': COMMAND_WITHDRAW_MONEY,
+                'Посмотреть информацию о балансах': COMMAND_VIEW_USER_DEPOSITS,
+                'Вернуться назад': COMMAND_TO_START
+            }
+            markup = self.create_buttons(button_parameters)
+            self.bot.send_message(call.message.chat.id, 'Я могу выполнить эти функции', reply_markup=markup)
             self.user_states[username] = WAIT_DEPOSIT
             self.bot.send_message(call.message.chat.id, 'У вас есть права для изменения данных')
         else:
@@ -92,11 +99,31 @@ class TradingStatBot:
 
     def handle_add_deposit(self, call):
         self.operation_type = DEPOSIT_ACTION
-        self.create_user_deposits_button(call.message, self.users)
+
+        button_parameters = {}
+
+        for name in self.users:
+            callback_data = f'select_user_{name}'
+            button_parameters[name] = callback_data
+
+        button_parameters['Вернуться назад'] = COMMAND_TO_START
+
+        markup = self.create_buttons(button_parameters)
+
+        self.bot.send_message(call.message.chat.id, 'Кто пополнил балик?', reply_markup=markup)
 
     def handle_withdraw_money(self, call):
-        self.operation_type = WITHDRAW_ACTION
-        self.create_user_deposits_button(call.message, self.users)
+        button_parameters = {}
+
+        for name in self.users:
+            callback_data = f'select_user_{name}'
+            button_parameters[name] = callback_data
+
+        button_parameters['Вернуться назад'] = COMMAND_TO_START
+
+        markup = self.create_buttons(button_parameters)
+
+        self.bot.send_message(call.message.chat.id, 'Кто снял деньги?', reply_markup=markup)
 
     def handle_to_start(self, call):
         self.send_welcome_message(call.message)
@@ -139,48 +166,22 @@ class TradingStatBot:
 
     def send_welcome_message(self, message):
         welcome_text = "Я робот-подпилоточник!🤖\nЯ могу ублажать тебя двумя функциями:"
-        markup = self.create_welcome_inline_buttons()
+
+        button_parameters = {
+            'Посмотреть статистику': COMMAND_VIEW_STATISTIC,
+            'Депозит': COMMAND_INTERACT_WITH_DEPOSIT,
+        }
+
+        markup = self.create_buttons(button_parameters)
+
         self.bot.send_message(message.chat.id,
                               text=welcome_text,
                               reply_markup=markup)
 
-    def create_welcome_inline_buttons(self):
+    def create_buttons(self, button_parameters):
         markup = types.InlineKeyboardMarkup()
 
-        buttons = [
-            types.InlineKeyboardButton(text='Посмотреть статистику', callback_data=COMMAND_VIEW_STATISTIC),
-            types.InlineKeyboardButton(text='Депозит', callback_data=COMMAND_INTERACT_WITH_DEPOSIT)
-        ]
-
-        for button in buttons:
-            markup.add(button)
+        for key in button_parameters.keys():
+            markup.add(types.InlineKeyboardButton(text=key, callback_data=button_parameters[key]))
 
         return markup
-
-    def create_user_deposits_button(self, message, names):
-        markup = types.InlineKeyboardMarkup()
-        for name in names:
-            callback_data = f'select_user_{name}'
-            markup.add(types.InlineKeyboardButton(text=name, callback_data=callback_data))
-
-        markup.add(types.InlineKeyboardButton(text="Вернуться назад", callback_data=COMMAND_TO_START))
-
-        if self.operation_type == DEPOSIT_ACTION:
-            self.bot.send_message(message.chat.id, 'Кто пополнил балик?', reply_markup=markup)
-        elif self.operation_type == WITHDRAW_ACTION:
-            self.bot.send_message(message.chat.id, 'Кто снял деньги?', reply_markup=markup)
-
-    def create_actions_with_deposit(self, message):
-        markup = types.InlineKeyboardMarkup()
-
-        buttons = [
-            types.InlineKeyboardButton(text='Пополнить баланс', callback_data=COMMAND_ADD_DEPOSIT),
-            types.InlineKeyboardButton(text='Снять деньги', callback_data=COMMAND_WITHDRAW_MONEY),
-            types.InlineKeyboardButton(text='Посмотреть информацию о балансах', callback_data=COMMAND_VIEW_USER_DEPOSITS),
-            types.InlineKeyboardButton(text="Вернуться назад", callback_data=COMMAND_TO_START)
-        ]
-
-        for button in buttons:
-            markup.add(button)
-
-        self.bot.send_message(message.chat.id, 'Я могу выполнить эти функции', reply_markup=markup)
