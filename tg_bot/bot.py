@@ -30,6 +30,7 @@ class TradingStatBot:
         self.operation_type = None
         self.username_pays = ''
         self.user_states = {}
+        self.username = ''
 
         self.initialize_handlers()
 
@@ -66,20 +67,20 @@ class TradingStatBot:
         def view_user_deposits_callback(call):
             self.handle_view_user_deposits(call)
 
-        @self.bot.message_handler(func=lambda message: self.user_states.get(message.from_user.username) == WAIT_DEPOSIT)
+        @self.bot.message_handler(func=lambda message: self.user_states.get(self.username) == WAIT_DEPOSIT)
         def deposit_callback(message):
             self.handle_deposit(message)
 
         @self.bot.message_handler(
-            func=lambda message: self.user_states.get(message.from_user.username) == SELECT_ACTION)
+            func=lambda message: self.user_states.get(self.username) == SELECT_ACTION)
         def echo_message_callback(message):
             self.handle_echo_message(message)
 
     def handle_start_command(self, message):
         self.bot.send_message(message.chat.id, 'Приветик!')
-        username = message.from_user.username
-        self.user_states[username] = SELECT_ACTION
-        self.database.add_new_user(username)
+        self.username = message.from_user.username
+        self.user_states[self.username] = SELECT_ACTION
+        self.database.add_new_user(self.username)
         self.send_welcome_message(message)
 
     def handle_view_statistic(self, call):
@@ -104,21 +105,24 @@ class TradingStatBot:
         )
 
     def handle_interact_with_deposit(self, call):
-        username = call.from_user.username
-        if self.database.is_user_admin(username):
-            self.create_actions_with_deposit(call.message)
-            self.user_states[username] = WAIT_DEPOSIT
+        if self.database.is_user_admin(self.username):
+            markup = self.create_actions_with_deposit()
+            self.bot.send_message(call.message.chat.id, 'Я могу выполнить эти функции', reply_markup=markup)
             self.bot.send_message(call.message.chat.id, 'У вас есть права для изменения данных')
         else:
             self.bot.send_message(call.message.chat.id, 'У вас нет прав для этих действий')
 
     def handle_add_deposit(self, call):
+        self.user_states[self.username] = WAIT_DEPOSIT
         self.operation_type = DEPOSIT_ACTION
-        self.create_user_deposits_button(call.message, self.users)
+        markup = self.create_user_deposits_button(self.users)
+        self.bot.send_message(call.message.chat.id, 'Кто пополнил балик?', reply_markup=markup)
 
     def handle_withdraw_money(self, call):
+        self.user_states[self.username] = WAIT_DEPOSIT
         self.operation_type = WITHDRAW_ACTION
-        self.create_user_deposits_button(call.message, self.users)
+        markup = self.create_user_deposits_button(self.users)
+        self.bot.send_message(call.message.chat.id, 'Кто снял деньги?', reply_markup=markup)
 
     def handle_to_start(self, call):
         self.send_welcome_message(call.message)
@@ -141,6 +145,7 @@ class TradingStatBot:
             deposit_amount = float(message.text)
 
             if deposit_amount >= 0:
+
                 if self.operation_type == DEPOSIT_ACTION:
                     self.bot.send_message(message.chat.id, f"Пользователь {self.username_pays} "
                                                            f"внес {deposit_amount}USD")
@@ -149,10 +154,13 @@ class TradingStatBot:
                     self.bot.send_message(message.chat.id, f"Пользователь {self.username_pays} "
                                                            f"снял {deposit_amount}USD")
                     self.database.update_balance(self.username_pays, -deposit_amount)
+
+                self.send_welcome_message(message)
+
             else:
                 self.bot.send_message(message.chat.id, "Сумма не может быть отрицательной!")
 
-            self.send_welcome_message(message)
+            self.user_states[self.username] = SELECT_ACTION
         except ValueError:
             self.bot.send_message(message.chat.id, "Некорректная сумма. Введите число!")
 
@@ -165,19 +173,6 @@ class TradingStatBot:
         self.bot.send_message(message.chat.id,
                               text=welcome_text,
                               reply_markup=markup)
-
-    def create_welcome_inline_buttons(self):
-        markup = types.InlineKeyboardMarkup()
-
-        buttons = [
-            types.InlineKeyboardButton(text='Посмотреть статистику', callback_data=COMMAND_VIEW_STATISTIC),
-            types.InlineKeyboardButton(text='Депозит', callback_data=COMMAND_INTERACT_WITH_DEPOSIT)
-        ]
-
-        for button in buttons:
-            markup.add(button)
-
-        return markup
 
     def get_week_statistic(self):
         current_week_monday = utils.get_current_week_monday()
@@ -200,33 +195,45 @@ class TradingStatBot:
 
         return data, screenshot, user_balances, number_of_week
 
-    def create_user_deposits_button(self, message, names):
+    def load_screenshot(self, screen_date):
+        return open(f'{STORAGE_CONFIG["path_to_screens"]}/{screen_date}.png', 'rb')
+
+    def create_welcome_inline_buttons(self):
         markup = types.InlineKeyboardMarkup()
+
+        buttons = [
+            types.InlineKeyboardButton(text='Посмотреть статистику', callback_data=COMMAND_VIEW_STATISTIC),
+            types.InlineKeyboardButton(text='Депозит', callback_data=COMMAND_INTERACT_WITH_DEPOSIT)
+        ]
+
+        for button in buttons:
+            markup.add(button)
+
+        return markup
+
+    def create_user_deposits_button(self, names):
+        markup = types.InlineKeyboardMarkup()
+
         for name in names:
             callback_data = f'select_user_{name}'
             markup.add(types.InlineKeyboardButton(text=name, callback_data=callback_data))
 
         markup.add(types.InlineKeyboardButton(text="Вернуться назад", callback_data=COMMAND_TO_START))
 
-        if self.operation_type == DEPOSIT_ACTION:
-            self.bot.send_message(message.chat.id, 'Кто пополнил балик?', reply_markup=markup)
-        elif self.operation_type == WITHDRAW_ACTION:
-            self.bot.send_message(message.chat.id, 'Кто снял деньги?', reply_markup=markup)
+        return markup
 
-    def load_screenshot(self, screen_date):
-        return open(f'{STORAGE_CONFIG["path_to_screens"]}/{screen_date}.png', 'rb')
-
-    def create_actions_with_deposit(self, message):
+    def create_actions_with_deposit(self):
         markup = types.InlineKeyboardMarkup()
 
         buttons = [
             types.InlineKeyboardButton(text='Пополнить баланс', callback_data=COMMAND_ADD_DEPOSIT),
             types.InlineKeyboardButton(text='Снять деньги', callback_data=COMMAND_WITHDRAW_MONEY),
-            types.InlineKeyboardButton(text='Посмотреть информацию о балансах', callback_data=COMMAND_VIEW_USER_DEPOSITS),
+            types.InlineKeyboardButton(text='Посмотреть информацию о балансах',
+                                       callback_data=COMMAND_VIEW_USER_DEPOSITS),
             types.InlineKeyboardButton(text="Вернуться назад", callback_data=COMMAND_TO_START)
         ]
 
         for button in buttons:
             markup.add(button)
 
-        self.bot.send_message(message.chat.id, 'Я могу выполнить эти функции', reply_markup=markup)
+        return markup

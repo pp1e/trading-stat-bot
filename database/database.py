@@ -105,5 +105,4 @@ class Database:
     def fetch_number_of_week(self):
         self.cursor.execute("SELECT COUNT(*) FROM weeks_stats")
         number_of_week = self.cursor.fetchone()[0] - 1
-        print(number_of_week)
         return number_of_week
