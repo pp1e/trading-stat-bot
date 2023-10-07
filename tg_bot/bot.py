@@ -24,7 +24,6 @@ WITHDRAW_ACTION = 'withdraw'
 class TradingStatBot:
     def __init__(self, data_base):
         self.database = data_base
-        self.users = self.database.fetch_user_tags()
         self.bot = telebot.TeleBot(BOT_CONFIG['token'])
         self.operation_type = None
         self.username_pays = ''
@@ -86,6 +85,7 @@ class TradingStatBot:
 
     def handle_interact_with_deposit(self, call):
         username = call.from_user.username
+
         if self.database.is_user_admin(username):
             button_parameters = {
                 'Пополнить баланс': COMMAND_ADD_DEPOSIT,
@@ -93,18 +93,18 @@ class TradingStatBot:
                 'Посмотреть информацию о балансах': COMMAND_VIEW_USER_DEPOSITS,
                 'Вернуться назад': COMMAND_TO_START
             }
+
             markup = self.create_buttons(button_parameters)
             self.bot.send_message(call.message.chat.id, 'Я могу выполнить эти функции', reply_markup=markup)
-            self.bot.send_message(call.message.chat.id, 'У вас есть права для изменения данных')
         else:
             self.bot.send_message(call.message.chat.id, 'У вас нет прав для этих действий')
 
     def handle_add_or_withdraw_deposit(self, call):
-        self.user_states[self.username] = WAIT_DEPOSIT
 
         button_parameters = {}
+        users = self.database.fetch_user_tags()
 
-        for name in self.users:
+        for name in users:
             callback_data = f'select_user_{name}'
             button_parameters[name] = callback_data
 
@@ -123,6 +123,7 @@ class TradingStatBot:
 
     def handle_select_user(self, call):
         self.username_pays = call.data.replace('select_user_', '')
+        self.user_states[self.username] = WAIT_DEPOSIT
         if self.operation_type == DEPOSIT_ACTION:
             self.bot.send_message(call.message.chat.id, f"На сколько пополнил {self.username_pays}?")
         elif self.operation_type == WITHDRAW_ACTION:
