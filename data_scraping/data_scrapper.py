@@ -8,9 +8,11 @@ import asyncio
 
 import utils
 from config.storage_config import STORAGE_CONFIG
-from incomes_calculations.calc_module import calculate_week_user_profits
+from database.create_connection import create_db_connection
+from database import users_rights_table
+from database import weeks_stats_table
+from incomes_calculations.calculate_week_profit import calculate_week_user_profits
 from utils import is_today_weekends, get_current_week_monday
-from database.database import Database
 
 
 def dollars_to_number(dollars):
@@ -56,7 +58,7 @@ async def scrap_data():
 
 
 def scrap_data_process():
-    database = Database(STORAGE_CONFIG['name'])
+    db_connection = create_db_connection()
     while True:
         if is_today_weekends():
             try:
@@ -64,8 +66,8 @@ def scrap_data_process():
                 if data:
                     overall_balance = data["overall_balance"]
 
-                    user_balances = database.fetch_user_balances()
-                    last_week_stat = database.fetch_week_stat(utils.get_last_week_monday())
+                    user_balances = users_rights_table.fetch_user_balances(db_connection)
+                    last_week_stat = weeks_stats_table.fetch_week_stat(db_connection, utils.get_last_week_monday())
 
                     user_overall_profits, user_week_profits = calculate_week_user_profits(
                         actual_overall_balance=overall_balance,
@@ -74,10 +76,13 @@ def scrap_data_process():
                         last_week_user_overall_profits=json.loads(last_week_stat[6]),
                     )
 
-                    is_current_week_stat_not_in_db = database.fetch_week_stat(utils.get_current_week_monday()) is None
+                    is_current_week_stat_not_in_db = weeks_stats_table.fetch_week_stat(
+                        db_connection, utils.get_current_week_monday()
+                    ) is None
 
                     if is_current_week_stat_not_in_db:
-                        database.insert_week_profit(
+                        weeks_stats_table.insert_week_profit(
+                            db_connection=db_connection,
                             monday_date=get_current_week_monday(),
                             overall_balance=overall_balance,
                             overall_profit=data["profit"],
@@ -88,7 +93,7 @@ def scrap_data_process():
                             user_week_profits=json.dumps(user_week_profits),
                         )
                         for user_tag, user_week_profit in user_week_profits.items():
-                            database.update_balance(user_tag, user_week_profit)
+                            users_rights_table.update_balance(db_connection, user_tag, user_week_profit)
 
                     print('Data was scrapped successfully!')
                 else:

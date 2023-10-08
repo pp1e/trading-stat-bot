@@ -1,9 +1,9 @@
 import telebot
 from telebot import types
 from config.bot_config import BOT_CONFIG
-from message_generator import user_balances_generator
-import utils
-from tg_bot.handle_week_stat import handle_view_statistic
+from tg_bot.message_generators import user_balances_generator
+from tg_bot.handlers.handle_week_stat import handle_view_statistic
+from database import users_rights_table
 
 SELECT_ACTION = 0
 WAIT_DEPOSIT = 1
@@ -22,8 +22,8 @@ WITHDRAW_ACTION = 'withdraw'
 
 
 class TradingStatBot:
-    def __init__(self, data_base):
-        self.database = data_base
+    def __init__(self, db_connection):
+        self.db_connection = db_connection
         self.bot = telebot.TeleBot(BOT_CONFIG['token'])
         self.operation_type = None
         self.username_pays = ''
@@ -39,7 +39,7 @@ class TradingStatBot:
 
         @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_VIEW_STATISTIC)
         def view_statistic_callback(call):
-            handle_view_statistic(call, self.bot, self.database)
+            handle_view_statistic(call, self.bot, self.db_connection)
 
         @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_INTERACT_WITH_DEPOSIT)
         def interact_with_deposit_callback(call):
@@ -80,13 +80,13 @@ class TradingStatBot:
         self.bot.send_message(message.chat.id, 'Приветик!')
         self.username = message.from_user.username
         self.user_states[self.username] = SELECT_ACTION
-        self.database.add_new_user(self.username)
+        users_rights_table.add_new_user(self.db_connection, self.username)
         self.send_welcome_message(message)
 
     def handle_interact_with_deposit(self, call):
         username = call.from_user.username
 
-        if self.database.is_user_admin(username):
+        if users_rights_table.is_user_admin(self.db_connection, username):
             markup = self.create_buttons(
                 button_parameters={
                     'Пополнить баланс': COMMAND_ADD_DEPOSIT,
@@ -102,7 +102,7 @@ class TradingStatBot:
 
     def handle_add_or_withdraw_deposit(self, call):
 
-        users = self.database.fetch_user_tags()
+        users = users_rights_table.fetch_user_tags(self.db_connection)
 
         button_parameters = {name: f'select_user_{name}' for name in users}
 
@@ -128,7 +128,7 @@ class TradingStatBot:
             self.bot.send_message(call.message.chat.id, f"Сколько снял {self.username_pays}?")
 
     def handle_view_user_deposits(self, call):
-        user_balances = self.database.fetch_user_balances()
+        user_balances = users_rights_table.fetch_user_balances(self.db_connection)
         message = user_balances_generator.form_user_balances_info(user_balances)
         self.bot.send_message(call.message.chat.id, message, parse_mode='html')
         self.send_welcome_message(call.message)
@@ -141,11 +141,11 @@ class TradingStatBot:
                 if self.operation_type == DEPOSIT_ACTION:
                     self.bot.send_message(message.chat.id, f"Пользователь {self.username_pays} "
                                                            f"внес {deposit_amount}USD")
-                    self.database.update_balance(self.username_pays, deposit_amount)
+                    users_rights_table.update_balance(self.db_connection, self.username_pays, deposit_amount)
                 elif self.operation_type == WITHDRAW_ACTION:
                     self.bot.send_message(message.chat.id, f"Пользователь {self.username_pays} "
                                                            f"снял {deposit_amount}USD")
-                    self.database.update_balance(self.username_pays, -deposit_amount)
+                    users_rights_table.update_balance(self.db_connection, self.username_pays, -deposit_amount)
             else:
                 self.bot.send_message(message.chat.id, "Сумма не может быть отрицательной!")
 
