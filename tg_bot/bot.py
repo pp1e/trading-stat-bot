@@ -87,26 +87,24 @@ class TradingStatBot:
         username = call.from_user.username
 
         if self.database.is_user_admin(username):
-            button_parameters = {
-                'Пополнить баланс': COMMAND_ADD_DEPOSIT,
-                'Снять деньги': COMMAND_WITHDRAW_MONEY,
-                'Посмотреть информацию о балансах': COMMAND_VIEW_USER_DEPOSITS,
-                'Вернуться назад': COMMAND_TO_START
-            }
+            markup = self.create_buttons(
+                button_parameters={
+                    'Пополнить баланс': COMMAND_ADD_DEPOSIT,
+                    'Снять деньги': COMMAND_WITHDRAW_MONEY,
+                    'Посмотреть информацию о балансах': COMMAND_VIEW_USER_DEPOSITS,
+                    'Вернуться назад': COMMAND_TO_START
+                }
+            )
 
-            markup = self.create_buttons(button_parameters)
             self.bot.send_message(call.message.chat.id, 'Я могу выполнить эти функции', reply_markup=markup)
         else:
             self.bot.send_message(call.message.chat.id, 'У вас нет прав для этих действий')
 
     def handle_add_or_withdraw_deposit(self, call):
 
-        button_parameters = {}
         users = self.database.fetch_user_tags()
 
-        for name in users:
-            callback_data = f'select_user_{name}'
-            button_parameters[name] = callback_data
+        button_parameters = {name: f'select_user_{name}' for name in users}
 
         button_parameters['Вернуться назад'] = COMMAND_TO_START
 
@@ -163,12 +161,11 @@ class TradingStatBot:
     def send_welcome_message(self, message):
         welcome_text = "Я робот-подпилоточник!🤖\nЯ могу ублажать тебя двумя функциями:"
 
-        button_parameters = {
-            'Посмотреть статистику': COMMAND_VIEW_STATISTIC,
-            'Депозит': COMMAND_INTERACT_WITH_DEPOSIT,
-        }
-
-        markup = self.create_buttons(button_parameters)
+        markup = self.create_buttons(
+            button_parameters={
+                'Посмотреть статистику': COMMAND_VIEW_STATISTIC,
+                'Депозит': COMMAND_INTERACT_WITH_DEPOSIT,
+            })
 
         self.bot.send_message(message.chat.id,
                               text=welcome_text,
