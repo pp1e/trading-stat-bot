@@ -1,10 +1,9 @@
-import json
 import telebot
 from telebot import types
 from config.bot_config import BOT_CONFIG
-from message_generator import week_statistic_generator, user_balances_generator
-from config.storage_config import STORAGE_CONFIG
+from message_generator import user_balances_generator
 import utils
+from tg_bot.handle_week_stat import handle_view_statistic
 
 SELECT_ACTION = 0
 WAIT_DEPOSIT = 1
@@ -40,7 +39,7 @@ class TradingStatBot:
 
         @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_VIEW_STATISTIC)
         def view_statistic_callback(call):
-            self.handle_view_statistic(call)
+            handle_view_statistic(call, self.bot, self.database)
 
         @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_INTERACT_WITH_DEPOSIT)
         def interact_with_deposit_callback(call):
@@ -81,27 +80,6 @@ class TradingStatBot:
         self.user_states[username] = SELECT_ACTION
         self.database.add_new_user(username)
         self.send_welcome_message(message)
-
-    def handle_view_statistic(self, call):
-        data, screenshot, user_balances, number_of_week = self.get_week_statistic()
-        message = week_statistic_generator.form_week_statistic(
-            date=data[0],
-            week_profit_percents=data[5],
-            user_overall_profits=json.loads(data[6]),
-            user_week_profits=json.loads(data[7]),
-            user_balances=user_balances,
-            week_profit=data[3],
-            overall_balance=data[1],
-            overall_profit=data[2],
-            number_of_week=number_of_week,
-        )
-
-        self.bot.send_photo(
-            chat_id=call.message.chat.id,
-            photo=screenshot,
-            caption=message,
-            parse_mode='html',
-        )
 
     def handle_interact_with_deposit(self, call):
         username = call.from_user.username
@@ -179,27 +157,6 @@ class TradingStatBot:
 
         return markup
 
-    def get_week_statistic(self):
-        current_week_monday = utils.get_current_week_monday()
-
-        if utils.is_today_weekends():
-            data = self.database.fetch_week_stat(current_week_monday)
-            if data is None:
-                last_week_monday = utils.get_last_week_monday()
-                data = self.database.fetch_week_stat(last_week_monday)
-                screenshot = self.load_screenshot(last_week_monday)
-            else:
-                screenshot = self.load_screenshot(current_week_monday)
-        else:
-            last_week_monday = utils.get_last_week_monday()
-            data = self.database.fetch_week_stat(last_week_monday)
-            screenshot = self.load_screenshot(last_week_monday)
-
-        user_balances = self.database.fetch_user_balances()
-        number_of_week = self.database.fetch_number_of_week()
-
-        return data, screenshot, user_balances, number_of_week
-
     def create_user_deposits_button(self, message, names):
         markup = types.InlineKeyboardMarkup()
         for name in names:
@@ -212,9 +169,6 @@ class TradingStatBot:
             self.bot.send_message(message.chat.id, 'Кто пополнил балик?', reply_markup=markup)
         elif self.operation_type == WITHDRAW_ACTION:
             self.bot.send_message(message.chat.id, 'Кто снял деньги?', reply_markup=markup)
-
-    def load_screenshot(self, screen_date):
-        return open(f'{STORAGE_CONFIG["path_to_screens"]}/{screen_date}.png', 'rb')
 
     def create_actions_with_deposit(self, message):
         markup = types.InlineKeyboardMarkup()
