@@ -5,12 +5,11 @@ from tg_bot.handlers.handle_week_stat import handle_view_statistic
 
 from tg_bot.handle_week_stat import handle_view_statistic
 
-from tg_bot.user_actions_handlers import BOT_COMMANDS
-from tg_bot.user_actions_handlers import DEPOSIT_ACTION, WITHDRAW_ACTION
+from constants import BOT_COMMANDS, DEPOSIT_ACTION, WITHDRAW_ACTION, SELECT_ACTION, WAIT_DEPOSIT
+
 from tg_bot.user_actions_handlers import handle_interact_with_deposit
 from tg_bot.user_actions_handlers import handle_add_or_withdraw_deposit
 from tg_bot.user_actions_handlers import handle_start_command
-from tg_bot.user_actions_handlers import SELECT_ACTION, WAIT_DEPOSIT
 from tg_bot.user_actions_handlers import handle_to_start
 from tg_bot.user_actions_handlers import handle_select_user
 from tg_bot.user_actions_handlers import handle_view_user_deposits
@@ -55,7 +54,7 @@ class TradingStatBot:
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_TO_START'])
         def to_start_callback(call):
-            self.user_states = handle_to_start(call, self.username, self.user_states)
+            self.user_states = handle_to_start(call, self.username, self.user_states, self.bot)
 
         @self.bot.callback_query_handler(func=lambda call: call.data.startswith(BOT_COMMANDS['COMMAND_SELECT_USER']))
         def select_user_callback(call):
@@ -63,11 +62,9 @@ class TradingStatBot:
                 call,
                 self.bot,
                 self.user_states,
-                self.username_pays,
                 self.username,
                 self.operation_type
             )
-
         @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_VIEW_USER_DEPOSITS'])
         def view_user_deposits_callback(call):
             handle_view_user_deposits(call, self.bot, self.db_connection)

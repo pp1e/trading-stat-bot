@@ -1,4 +1,4 @@
-from tg_bot.user_actions_handlers import BOT_COMMANDS
+from constants import BOT_COMMANDS
 from tg_bot.bot_utils import create_buttons
 
 
