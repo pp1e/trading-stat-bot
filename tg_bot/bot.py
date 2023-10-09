@@ -1,21 +1,18 @@
 import telebot
 from config.bot_config import BOT_CONFIG
 
-from tg_bot.handlers.handle_week_stat import handle_view_statistic
-
-from tg_bot.handle_week_stat import handle_view_statistic
-
 from constants import BOT_COMMANDS, DEPOSIT_ACTION, WITHDRAW_ACTION, SELECT_ACTION, WAIT_DEPOSIT
 
-from tg_bot.user_actions_handlers import handle_interact_with_deposit
-from tg_bot.user_actions_handlers import handle_add_or_withdraw_deposit
-from tg_bot.user_actions_handlers import handle_start_command
-from tg_bot.user_actions_handlers import handle_to_start
-from tg_bot.user_actions_handlers import handle_select_user
-from tg_bot.user_actions_handlers import handle_view_user_deposits
-from tg_bot.user_actions_handlers import handle_deposit
+from tg_bot.handlers.handle_week_stat import handle_view_statistic
+from tg_bot.handlers.user_actions_handlers import handle_interact_with_deposit
+from tg_bot.handlers.user_actions_handlers import handle_add_or_withdraw_deposit
+from tg_bot.handlers.user_actions_handlers import handle_start_command
+from tg_bot.handlers.user_actions_handlers import handle_to_start
+from tg_bot.handlers.user_actions_handlers import handle_select_user
+from tg_bot.handlers.user_actions_handlers import handle_view_user_deposits
+from tg_bot.handlers.user_actions_handlers import handle_deposit
 
-from tg_bot.bot_messages import handle_echo_message
+from tg_bot.message_generators.bot_messages import handle_echo_message
 
 
 class TradingStatBot:
@@ -32,7 +29,8 @@ class TradingStatBot:
     def initialize_handlers(self):
         @self.bot.message_handler(commands=[BOT_COMMANDS['COMMAND_START']])
         def start(message):
-            self.username, self.user_states = handle_start_command(self.bot, self.user_states, self.database, message)
+            self.username, self.user_states = handle_start_command(self.bot, self.user_states, self.db_connection,
+                                                                   message)
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_VIEW_STATISTIC'])
         def view_statistic_callback(call):
@@ -65,6 +63,7 @@ class TradingStatBot:
                 self.username,
                 self.operation_type
             )
+
         @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_VIEW_USER_DEPOSITS'])
         def view_user_deposits_callback(call):
             handle_view_user_deposits(call, self.bot, self.db_connection)
