@@ -1,24 +1,22 @@
 import telebot
-from telebot import types
 from config.bot_config import BOT_CONFIG
-from tg_bot.message_generators import user_balances_generator
+
 from tg_bot.handlers.handle_week_stat import handle_view_statistic
-from database import users_rights_table
 
-SELECT_ACTION = 0
-WAIT_DEPOSIT = 1
+from tg_bot.handle_week_stat import handle_view_statistic
 
-COMMAND_START = 'start'
-COMMAND_VIEW_STATISTIC = 'view_statistic'
-COMMAND_INTERACT_WITH_DEPOSIT = 'interact_with_deposit'
-COMMAND_ADD_DEPOSIT = 'add_deposit'
-COMMAND_WITHDRAW_MONEY = 'withdraw_money'
-COMMAND_TO_START = 'to_start'
-COMMAND_SELECT_USER = 'select_user'
-COMMAND_VIEW_USER_DEPOSITS = 'view_user_deposits'
+from tg_bot.user_actions_handlers import BOT_COMMANDS
+from tg_bot.user_actions_handlers import DEPOSIT_ACTION, WITHDRAW_ACTION
+from tg_bot.user_actions_handlers import handle_interact_with_deposit
+from tg_bot.user_actions_handlers import handle_add_or_withdraw_deposit
+from tg_bot.user_actions_handlers import handle_start_command
+from tg_bot.user_actions_handlers import SELECT_ACTION, WAIT_DEPOSIT
+from tg_bot.user_actions_handlers import handle_to_start
+from tg_bot.user_actions_handlers import handle_select_user
+from tg_bot.user_actions_handlers import handle_view_user_deposits
+from tg_bot.user_actions_handlers import handle_deposit
 
-DEPOSIT_ACTION = 'deposit'
-WITHDRAW_ACTION = 'withdraw'
+from tg_bot.bot_messages import handle_echo_message
 
 
 class TradingStatBot:
@@ -33,148 +31,61 @@ class TradingStatBot:
         self.initialize_handlers()
 
     def initialize_handlers(self):
-        @self.bot.message_handler(commands=[COMMAND_START])
+        @self.bot.message_handler(commands=[BOT_COMMANDS['COMMAND_START']])
         def start(message):
-            self.handle_start_command(message)
+            self.username, self.user_states = handle_start_command(self.bot, self.user_states, self.database, message)
 
-        @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_VIEW_STATISTIC)
+        @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_VIEW_STATISTIC'])
         def view_statistic_callback(call):
-            handle_view_statistic(call, self.bot, self.db_connection)
+            self.username = handle_view_statistic(call, self.bot, self.db_connection)
 
-        @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_INTERACT_WITH_DEPOSIT)
+        @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_INTERACT_WITH_DEPOSIT'])
         def interact_with_deposit_callback(call):
-            self.handle_interact_with_deposit(call)
+            handle_interact_with_deposit(call, self.bot, self.db_connection)
 
-        @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_ADD_DEPOSIT)
+        @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_ADD_DEPOSIT'])
         def add_deposit_callback(call):
             self.operation_type = DEPOSIT_ACTION
-            self.handle_add_or_withdraw_deposit(call)
+            handle_add_or_withdraw_deposit(call, self.bot, self.db_connection, self.operation_type)
 
-        @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_WITHDRAW_MONEY)
+        @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_WITHDRAW_MONEY'])
         def withdraw_money_callback(call):
             self.operation_type = WITHDRAW_ACTION
-            self.handle_add_or_withdraw_deposit(call)
+            handle_add_or_withdraw_deposit(call, self.bot, self.db_connection, self.operation_type)
 
-        @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_TO_START)
+        @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_TO_START'])
         def to_start_callback(call):
-            self.handle_to_start(call)
+            self.user_states = handle_to_start(call, self.username, self.user_states)
 
-        @self.bot.callback_query_handler(func=lambda call: call.data.startswith(COMMAND_SELECT_USER))
+        @self.bot.callback_query_handler(func=lambda call: call.data.startswith(BOT_COMMANDS['COMMAND_SELECT_USER']))
         def select_user_callback(call):
-            self.handle_select_user(call)
+            self.user_states, self.username_pays = handle_select_user(
+                call,
+                self.bot,
+                self.user_states,
+                self.username_pays,
+                self.username,
+                self.operation_type
+            )
 
-        @self.bot.callback_query_handler(func=lambda call: call.data == COMMAND_VIEW_USER_DEPOSITS)
+        @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_VIEW_USER_DEPOSITS'])
         def view_user_deposits_callback(call):
-            self.handle_view_user_deposits(call)
+            handle_view_user_deposits(call, self.bot, self.db_connection)
 
-        @self.bot.message_handler(func=lambda message: self.user_states.get(self.username) == WAIT_DEPOSIT)
+        @self.bot.message_handler(
+            func=lambda message: self.user_states.get(self.username) == WAIT_DEPOSIT)
         def deposit_callback(message):
-            self.handle_deposit(message)
+            self.user_states = handle_deposit(
+                message,
+                self.bot,
+                self.db_connection,
+                self.username,
+                self.user_states,
+                self.username_pays,
+                self.operation_type
+            )
 
         @self.bot.message_handler(
             func=lambda message: self.user_states.get(self.username) == SELECT_ACTION)
         def echo_message_callback(message):
-            self.handle_echo_message(message)
-
-    def handle_start_command(self, message):
-        self.bot.send_message(message.chat.id, 'Приветик!')
-        self.username = message.from_user.username
-        self.user_states[self.username] = SELECT_ACTION
-        users_rights_table.add_new_user(self.db_connection, self.username)
-        self.send_welcome_message(message)
-
-    def handle_interact_with_deposit(self, call):
-        username = call.from_user.username
-
-        if users_rights_table.is_user_admin(self.db_connection, username):
-            markup = self.create_buttons(
-                button_parameters={
-                    'Пополнить баланс': COMMAND_ADD_DEPOSIT,
-                    'Снять деньги': COMMAND_WITHDRAW_MONEY,
-                    'Посмотреть информацию о балансах': COMMAND_VIEW_USER_DEPOSITS,
-                    'Вернуться назад': COMMAND_TO_START
-                }
-            )
-
-            self.bot.send_message(call.message.chat.id, 'Я могу выполнить эти функции', reply_markup=markup)
-        else:
-            self.bot.send_message(call.message.chat.id, 'У вас нет прав для этих действий')
-
-    def handle_add_or_withdraw_deposit(self, call):
-
-        users = users_rights_table.fetch_user_tags(self.db_connection)
-
-        button_parameters = {name: f'select_user_{name}' for name in users}
-
-        button_parameters['Вернуться назад'] = COMMAND_TO_START
-
-        markup = self.create_buttons(button_parameters)
-
-        if self.operation_type == DEPOSIT_ACTION:
-            self.bot.send_message(call.message.chat.id, 'Кто пополнил балик?', reply_markup=markup)
-        else:
-            self.bot.send_message(call.message.chat.id, 'Кто снял деньги?', reply_markup=markup)
-
-    def handle_to_start(self, call):
-        self.user_states[self.username] = SELECT_ACTION
-        self.send_welcome_message(call.message)
-
-    def handle_select_user(self, call):
-        self.username_pays = call.data.replace('select_user_', '')
-        self.user_states[self.username] = WAIT_DEPOSIT
-        if self.operation_type == DEPOSIT_ACTION:
-            self.bot.send_message(call.message.chat.id, f"На сколько пополнил {self.username_pays}?")
-        elif self.operation_type == WITHDRAW_ACTION:
-            self.bot.send_message(call.message.chat.id, f"Сколько снял {self.username_pays}?")
-
-    def handle_view_user_deposits(self, call):
-        user_balances = users_rights_table.fetch_user_balances(self.db_connection)
-        message = user_balances_generator.form_user_balances_info(user_balances)
-        self.bot.send_message(call.message.chat.id, message, parse_mode='html')
-        self.send_welcome_message(call.message)
-
-    def handle_deposit(self, message):
-        try:
-            deposit_amount = float(message.text)
-
-            if deposit_amount >= 0:
-                if self.operation_type == DEPOSIT_ACTION:
-                    self.bot.send_message(message.chat.id, f"Пользователь {self.username_pays} "
-                                                           f"внес {deposit_amount}USD")
-                    users_rights_table.update_balance(self.db_connection, self.username_pays, deposit_amount)
-                elif self.operation_type == WITHDRAW_ACTION:
-                    self.bot.send_message(message.chat.id, f"Пользователь {self.username_pays} "
-                                                           f"снял {deposit_amount}USD")
-                    users_rights_table.update_balance(self.db_connection, self.username_pays, -deposit_amount)
-            else:
-                self.bot.send_message(message.chat.id, "Сумма не может быть отрицательной!")
-
-            self.user_states[self.username] = SELECT_ACTION
-
-            self.send_welcome_message(message)
-        except ValueError:
-            self.bot.send_message(message.chat.id, "Некорректная сумма. Введите число!")
-
-    def handle_echo_message(self, message):
-        self.bot.send_message(message.chat.id, 'Хозяин еще не научил меня этому :(')
-
-    def send_welcome_message(self, message):
-        welcome_text = "Я робот-подпилоточник!🤖\nЯ могу ублажать тебя двумя функциями:"
-
-        markup = self.create_buttons(
-            button_parameters={
-                'Посмотреть статистику': COMMAND_VIEW_STATISTIC,
-                'Депозит': COMMAND_INTERACT_WITH_DEPOSIT,
-            })
-
-        self.bot.send_message(message.chat.id,
-                              text=welcome_text,
-                              reply_markup=markup)
-
-    def create_buttons(self, button_parameters):
-        markup = types.InlineKeyboardMarkup()
-
-        for key in button_parameters.keys():
-            markup.add(types.InlineKeyboardButton(text=key, callback_data=button_parameters[key]))
-
-        return markup
+            handle_echo_message(self.bot, message)
