@@ -1,23 +1,7 @@
 from tg_bot.bot_utils import create_buttons
 from tg_bot.bot_messages import send_welcome_message
 from message_generator.user_balances_generator import form_user_balances_info
-
-BOT_COMMANDS = {
-    'COMMAND_START': 'start',
-    'COMMAND_VIEW_STATISTIC': 'view_statistic',
-    'COMMAND_INTERACT_WITH_DEPOSIT': 'interact_with_deposit',
-    'COMMAND_ADD_DEPOSIT': 'add_deposit',
-    'COMMAND_WITHDRAW_MONEY': 'withdraw_money',
-    'COMMAND_TO_START': 'to_start',
-    'COMMAND_SELECT_USER': 'select_user',
-    'COMMAND_VIEW_USER_DEPOSITS': 'view_user_deposits',
-}
-
-SELECT_ACTION = 0
-WAIT_DEPOSIT = 1
-
-DEPOSIT_ACTION = 'deposit'
-WITHDRAW_ACTION = 'withdraw'
+from constants import BOT_COMMANDS, SELECT_ACTION, WAIT_DEPOSIT, DEPOSIT_ACTION, WITHDRAW_ACTION
 
 
 def handle_start_command(bot, user_states, database, message):
@@ -30,9 +14,10 @@ def handle_start_command(bot, user_states, database, message):
     return username, user_states
 
 
-def handle_to_start(call, username, user_states):
+def handle_to_start(call, username, user_states, bot):
     user_states[username] = SELECT_ACTION
-    send_welcome_message(call.message)
+    send_welcome_message(bot, call.message)
+
     return user_states
 
 
@@ -54,8 +39,6 @@ def handle_interact_with_deposit(call, bot, database):
     else:
         bot.send_message(call.message.chat.id, 'У вас нет прав для этих действий')
 
-    return username
-
 
 def handle_add_or_withdraw_deposit(call, bot, database, operation_type):
     users = database.fetch_user_tags()
@@ -76,16 +59,20 @@ def handle_view_user_deposits(call, bot, database):
     user_balances = database.fetch_user_balances()
     message = form_user_balances_info(user_balances)
     bot.send_message(call.message.chat.id, message, parse_mode='html')
-    send_welcome_message(call.message)
+    send_welcome_message(bot, call.message)
 
 
 def handle_select_user(call, bot, user_states, username, operation_type):
     username_pays = call.data.replace('select_user_', '')
+
     user_states[username] = WAIT_DEPOSIT
+
     if operation_type == DEPOSIT_ACTION:
         bot.send_message(call.message.chat.id, f"На сколько пополнил {username_pays}?")
     elif operation_type == WITHDRAW_ACTION:
         bot.send_message(call.message.chat.id, f"Сколько снял {username_pays}?")
+
+    return user_states, username_pays
 
 
 def handle_deposit(message, bot, database, username, user_states, username_pays, operation_type):
@@ -106,6 +93,8 @@ def handle_deposit(message, bot, database, username, user_states, username_pays,
 
         user_states[username] = SELECT_ACTION
 
-        send_welcome_message(message)
+        send_welcome_message(bot, message)
     except ValueError:
         bot.send_message(message.chat.id, "Некорректная сумма. Введите число!")
+
+    return user_states
