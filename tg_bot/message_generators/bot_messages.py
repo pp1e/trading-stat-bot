@@ -1,5 +1,5 @@
 from constants import BOT_COMMANDS
-from tg_bot.bot_utils import create_buttons
+from tg_bot.entities.bot_utils import create_buttons
 
 
 def send_welcome_message(bot, message):
