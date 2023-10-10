@@ -1,8 +1,10 @@
 from constants import BOT_COMMANDS
-from tg_bot.entities.bot_utils import create_buttons
+from tg_bot.handlers.handle_create_buttons import create_buttons
 
 
 def send_welcome_message(bot, message):
+    bot.send_message(message.chat.id, 'Приветик!')
+
     welcome_text = "Я робот-подпилоточник!🤖\nЯ могу ублажать тебя двумя функциями:"
 
     markup = create_buttons(
@@ -16,7 +18,3 @@ def send_welcome_message(bot, message):
         text=welcome_text,
         reply_markup=markup
     )
-
-
-def handle_echo_message(bot, message):
-    bot.send_message(message.chat.id, 'Хозяин еще не научил меня этому :(')
