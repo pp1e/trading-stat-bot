@@ -1,30 +1,18 @@
-from constants import DEPOSIT_ACTION, WITHDRAW_ACTION, BOT_COMMANDS
+from constants import BOT_COMMANDS
 from tg_bot.message_generators.create_buttons import create_buttons
 
 
-def send_operation_type_message(operation_type, bot, call, users):
+def send_operation_type_message(bot, chat_id, users, message):
     button_parameters = {name: f'select_user_{name}' for name in users}
 
     button_parameters['Вернуться назад'] = BOT_COMMANDS['COMMAND_TO_START']
 
     markup = create_buttons(button_parameters=button_parameters)
 
-    if operation_type == DEPOSIT_ACTION:
-        bot.send_message(call.message.chat.id, 'Кто пополнил баланс?', reply_markup=markup)
-    else:
-        bot.send_message(call.message.chat.id, 'Кто снял деньги?', reply_markup=markup)
+    bot.send_message(chat_id, message, reply_markup=markup)
 
 
-def send_operation_result_message(operation_type, bot, message, username_pays, deposit_amount):
-    if operation_type == DEPOSIT_ACTION:
-        bot.send_message(message.chat.id, f"Пользователь {username_pays} "
-                                          f"внес {deposit_amount}USD")
-    elif operation_type == WITHDRAW_ACTION:
-        bot.send_message(message.chat.id, f"Пользователь {username_pays} "
-                                          f"снял {deposit_amount}USD")
-
-
-def send_user_rights(bot, call):
+def send_user_rights(bot, chat_id):
     markup = create_buttons(
         button_parameters={
             'Пополнить баланс': BOT_COMMANDS['COMMAND_ADD_DEPOSIT'],
@@ -34,11 +22,4 @@ def send_user_rights(bot, call):
         }
     )
 
-    bot.send_message(call.message.chat.id, 'Я могу выполнить эти функции', reply_markup=markup)
-
-
-def send_transaction_amount_question(operation_type, bot, call, username_pays):
-    if operation_type == DEPOSIT_ACTION:
-        bot.send_message(call.message.chat.id, f"На сколько пополнил {username_pays}?")
-    elif operation_type == WITHDRAW_ACTION:
-        bot.send_message(call.message.chat.id, f"Сколько снял {username_pays}?")
+    bot.send_message(chat_id, 'Я могу выполнить эти функции', reply_markup=markup)
