@@ -2,6 +2,8 @@ from constants import BOT_COMMANDS
 from database import users_rights_table
 from tg_bot.handlers.create_buttons import create_buttons
 
+from tg_bot.message_generators.simple_messages_generator import send_user_rights
+
 
 def handle_interact_with_deposit(call, bot, db_connection, username):
     if username is None:
@@ -27,6 +29,15 @@ def check_user_rights(call, bot, db_connection, username):
             }
         )
 
-        bot.send_message(call.message.chat.id, 'Я могу выполнить эти функции', reply_markup=markup)
+        send_user_rights(
+            bot=bot,
+            call=call,
+            markup=markup
+        )
     else:
-        bot.send_message(call.message.chat.id, 'У вас нет прав для этих действий')
+        markup = None
+        send_user_rights(
+            bot=bot,
+            call=call,
+            markup=markup
+        )
