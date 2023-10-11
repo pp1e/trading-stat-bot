@@ -1,6 +1,7 @@
-from constants import DEPOSIT_ACTION, BOT_COMMANDS
+from constants import BOT_COMMANDS
 from database import users_rights_table
 from tg_bot.handlers.create_buttons import create_buttons
+from tg_bot.message_generators.simple_messages_generator import send_operation_type_message
 
 
 def handle_add_or_withdraw_deposit(call, bot, db_connection, operation_type):
@@ -12,7 +13,9 @@ def handle_add_or_withdraw_deposit(call, bot, db_connection, operation_type):
 
     markup = create_buttons(button_parameters)
 
-    if operation_type == DEPOSIT_ACTION:
-        bot.send_message(call.message.chat.id, 'Кто пополнил балик?', reply_markup=markup)
-    else:
-        bot.send_message(call.message.chat.id, 'Кто снял деньги?', reply_markup=markup)
+    send_operation_type_message(
+        operation_type=operation_type,
+        bot=bot,
+        call=call,
+        markup=markup
+    )
