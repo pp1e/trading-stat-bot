@@ -1,6 +1,6 @@
 from constants import DEPOSIT_ACTION, BOT_COMMANDS
 from database import users_rights_table
-from tg_bot.handlers.handle_create_buttons import create_buttons
+from tg_bot.handlers.create_buttons import create_buttons
 
 
 def handle_add_or_withdraw_deposit(call, bot, db_connection, operation_type):
