@@ -7,4 +7,4 @@ def handle_view_user_deposits(call, bot, db_connection):
     user_balances = users_rights_table.fetch_user_balances(db_connection)
     message = form_user_balances_info(user_balances)
     bot.send_message(call.message.chat.id, message, parse_mode='html')
-    send_welcome_message(bot, call.message)
+    send_welcome_message(bot=bot, message=call.message)

@@ -20,7 +20,7 @@ def handle_deposit(message, bot, db_connection, username, user_states, username_
 
         user_states[username] = SELECT_ACTION
 
-        send_welcome_message(bot, message)
+        send_welcome_message(bot=bot, message=message)
     except ValueError:
         bot.send_message(message.chat.id, "Некорректная сумма. Введите число!")
 
@@ -39,9 +39,17 @@ def handle_deposit_amount(deposit_amount, message, bot, operation_type, db_conne
         )
 
         if operation_type == DEPOSIT_ACTION:
-            users_rights_table.update_balance(db_connection, username_pays, deposit_amount)
+            users_rights_table.update_balance(
+                db_connection=db_connection,
+                username_pays=username_pays,
+                amount=deposit_amount
+            )
         elif operation_type == WITHDRAW_ACTION:
-            users_rights_table.update_balance(db_connection, username_pays, -deposit_amount)
+            users_rights_table.update_balance(
+                db_connection=db_connection,
+                username_pays=username_pays,
+                amount=-deposit_amount
+            )
 
     else:
         bot.send_message(message.chat.id, "Сумма не может быть отрицательной!")
