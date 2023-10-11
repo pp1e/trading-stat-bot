@@ -2,7 +2,6 @@ from constants import DEPOSIT_ACTION, WITHDRAW_ACTION, SELECT_ACTION
 from database import users_rights_table
 
 from tg_bot.message_generators.welcome_message_generator import send_welcome_message
-from tg_bot.message_generators.simple_messages_generator import send_operation_result_message
 
 
 def handle_deposit(message, bot, db_connection, username, user_states, username_pays, operation_type):
@@ -30,21 +29,19 @@ def handle_deposit(message, bot, db_connection, username, user_states, username_
 def handle_deposit_amount(deposit_amount, message, bot, operation_type, db_connection, username_pays):
     if deposit_amount >= 0:
 
-        send_operation_result_message(
-            operation_type=operation_type,
-            bot=bot,
-            message=message,
-            username_pays=username_pays,
-            deposit_amount=deposit_amount
-        )
-
         if operation_type == DEPOSIT_ACTION:
+            bot.send_message(message.chat.id, f"Пользователь {username_pays} "
+                                              f"внес {deposit_amount}USD")
+
             users_rights_table.update_balance(
                 db_connection=db_connection,
                 username_pays=username_pays,
                 amount=deposit_amount
             )
         elif operation_type == WITHDRAW_ACTION:
+            bot.send_message(message.chat.id, f"Пользователь {username_pays} "
+                                              f"снял {deposit_amount}USD")
+
             users_rights_table.update_balance(
                 db_connection=db_connection,
                 username_pays=username_pays,

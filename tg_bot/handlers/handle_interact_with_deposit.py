@@ -17,6 +17,6 @@ def handle_interact_with_deposit(call, bot, db_connection, username):
 
 def check_user_rights(call, bot, db_connection, username):
     if users_rights_table.is_user_admin(db_connection=db_connection, username=username):
-        send_user_rights(bot=bot, call=call)
+        send_user_rights(bot=bot, chat_id=call.message.chat.id)
     else:
         bot.send_message(call.message.chat.id, 'У вас нет прав для этих действий')
