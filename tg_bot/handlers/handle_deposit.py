@@ -19,7 +19,8 @@ def handle_deposit(message, bot, db_connection, username, user_states, username_
 
         user_states[username] = SELECT_ACTION
 
-        send_welcome_message(bot=bot, message=message)
+        send_welcome_message(bot=bot, chat_id=message.chat.id)
+
     except ValueError:
         bot.send_message(message.chat.id, "Некорректная сумма. Введите число!")
 
