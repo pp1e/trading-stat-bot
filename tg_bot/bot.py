@@ -12,8 +12,6 @@ from tg_bot.handlers.handle_select_user import handle_select_user
 from tg_bot.handlers.handle_view_user_deposits import handle_view_user_deposits
 from tg_bot.handlers.handle_deposit import handle_deposit
 
-from tg_bot.message_generators.echo_message_generator import handle_echo_message
-
 
 class TradingStatBot:
     def __init__(self, db_connection):
@@ -40,7 +38,7 @@ class TradingStatBot:
         @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_VIEW_STATISTIC'])
         def view_statistic_callback(call):
             handle_view_statistic(
-                call=call,
+                chat_id=call.message.chat.id,
                 bot=self.bot,
                 db_connection=self.db_connection
             )
@@ -48,7 +46,7 @@ class TradingStatBot:
         @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_INTERACT_WITH_DEPOSIT'])
         def interact_with_deposit_callback(call):
             handle_interact_with_deposit(
-                call=call,
+                chat_id=call.message.chat.id,
                 bot=self.bot,
                 db_connection=self.db_connection,
                 username=self.username
@@ -58,7 +56,7 @@ class TradingStatBot:
         def add_deposit_callback(call):
             self.operation_type = DEPOSIT_ACTION
             handle_add_or_withdraw_deposit(
-                call=call,
+                chat_id=call.message.chat.id,
                 bot=self.bot,
                 db_connection=self.db_connection,
                 operation_type=self.operation_type
@@ -68,7 +66,7 @@ class TradingStatBot:
         def withdraw_money_callback(call):
             self.operation_type = WITHDRAW_ACTION
             handle_add_or_withdraw_deposit(
-                call=call,
+                chat_id=call.message.chat.id,
                 bot=self.bot,
                 db_connection=self.db_connection,
                 operation_type=self.operation_type
@@ -77,7 +75,7 @@ class TradingStatBot:
         @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_TO_START'])
         def to_start_callback(call):
             self.user_states = handle_to_start(
-                call=call,
+                chat_id=call.message.chat.id,
                 username=self.username,
                 user_states=self.user_states,
                 bot=self.bot
@@ -97,7 +95,7 @@ class TradingStatBot:
         @self.bot.callback_query_handler(func=lambda call: call.data == BOT_COMMANDS['COMMAND_VIEW_USER_DEPOSITS'])
         def view_user_deposits_callback(call):
             handle_view_user_deposits(
-                call=call,
+                chat_id=call.message.chat.id,
                 bot=self.bot,
                 db_connection=self.db_connection
             )
@@ -118,7 +116,4 @@ class TradingStatBot:
 
         @self.bot.message_handler(func=lambda message: self.user_states.get(self.username) == SELECT_ACTION)
         def echo_message_callback(message):
-            handle_echo_message(
-                bot=self.bot,
-                message=message
-            )
+            self.bot.send_message(message.chat.id, 'Хозяин еще не научил меня этому :(')
