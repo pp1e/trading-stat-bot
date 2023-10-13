@@ -14,7 +14,7 @@ def handle_view_statistic(chat_id, bot, db_connection):
     message = week_statistic_generator.form_week_statistic_message(week_stat)
 
     bot.send_photo(
-        chat_id=chat_id.message.chat.id,
+        chat_id=chat_id,
         photo=week_stat.screenshot,
         caption=message,
         parse_mode='html',

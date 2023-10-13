@@ -1,4 +1,5 @@
-from constants import BOT_COMMANDS
+from tg_bot.entities.bot_commands import BotCommands
+
 from tg_bot.message_generators.create_buttons import create_buttons
 
 
@@ -9,8 +10,8 @@ def send_welcome_message(bot, chat_id):
 
     markup = create_buttons(
         button_parameters={
-            'Посмотреть статистику': BOT_COMMANDS['COMMAND_VIEW_STATISTIC'],
-            'Депозит': BOT_COMMANDS['COMMAND_INTERACT_WITH_DEPOSIT'],
+            'Посмотреть статистику': BotCommands.VIEW_STATISTIC.value,
+            'Депозит': BotCommands.INTERACT_WITH_DEPOSIT.value,
         })
 
     bot.send_message(
