@@ -9,6 +9,6 @@ def handle_start_command(message, bot, db_connection, user_states):
 
     users_rights_table.add_new_user(db_connection=db_connection, username=username)
 
-    send_welcome_message(bot=bot, message=message)
+    send_welcome_message(bot=bot, chat_id=message.chat.id)
 
     return username, user_states

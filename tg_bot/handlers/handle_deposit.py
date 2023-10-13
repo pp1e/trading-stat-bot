@@ -10,7 +10,7 @@ def handle_deposit(message, bot, db_connection, username, user_states, username_
 
         handle_deposit_amount(
             deposit_amount=deposit_amount,
-            message=message,
+            chat_id=message.chat.id,
             bot=bot,
             operation_type=operation_type,
             db_connection=db_connection,
@@ -26,11 +26,11 @@ def handle_deposit(message, bot, db_connection, username, user_states, username_
     return user_states
 
 
-def handle_deposit_amount(deposit_amount, message, bot, operation_type, db_connection, username_pays):
+def handle_deposit_amount(deposit_amount, chat_id, bot, operation_type, db_connection, username_pays):
     if deposit_amount >= 0:
 
         if operation_type == DEPOSIT_ACTION:
-            bot.send_message(message.chat.id, f"Пользователь {username_pays} "
+            bot.send_message(chat_id, f"Пользователь {username_pays} "
                                               f"внес {deposit_amount}USD")
 
             users_rights_table.update_balance(
@@ -39,7 +39,7 @@ def handle_deposit_amount(deposit_amount, message, bot, operation_type, db_conne
                 amount=deposit_amount
             )
         elif operation_type == WITHDRAW_ACTION:
-            bot.send_message(message.chat.id, f"Пользователь {username_pays} "
+            bot.send_message(chat_id, f"Пользователь {username_pays} "
                                               f"снял {deposit_amount}USD")
 
             users_rights_table.update_balance(
@@ -49,4 +49,4 @@ def handle_deposit_amount(deposit_amount, message, bot, operation_type, db_conne
             )
 
     else:
-        bot.send_message(message.chat.id, "Сумма не может быть отрицательной!")
+        bot.send_message(chat_id, "Сумма не может быть отрицательной!")

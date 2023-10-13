@@ -1,22 +1,22 @@
 from database import users_rights_table
 
-from tg_bot.message_generators.simple_messages_generator import send_user_rights
+from tg_bot.message_generators.user_rights_message_generator import send_user_rights
 
 
-def handle_interact_with_deposit(call, bot, db_connection, username):
+def handle_interact_with_deposit(chat_id, bot, db_connection, username):
     if username is None:
-        bot.send_message(call.message.chat.id, 'Установите имя пользователя в настройках телеграмма')
+        bot.send_message(chat_id, 'Установите имя пользователя в настройках телеграмма')
     else:
         check_user_rights(
-            call=call,
+            chat_id=chat_id,
             bot=bot,
             db_connection=db_connection,
             username=username
         )
 
 
-def check_user_rights(call, bot, db_connection, username):
+def check_user_rights(chat_id, bot, db_connection, username):
     if users_rights_table.is_user_admin(db_connection=db_connection, username=username):
-        send_user_rights(bot=bot, chat_id=call.message.chat.id)
+        send_user_rights(bot=bot, chat_id=chat_id)
     else:
-        bot.send_message(call.message.chat.id, 'У вас нет прав для этих действий')
+        bot.send_message(chat_id, 'У вас нет прав для этих действий')
