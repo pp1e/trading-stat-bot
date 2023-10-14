@@ -64,15 +64,12 @@ def scrap_data_process():
             try:
                 data = asyncio.run(scrap_data())
                 if data:
-                    overall_balance = data["overall_balance"]
-
                     user_balances = users_rights_table.fetch_user_balances(db_connection)
                     last_week_stat = weeks_stats_table.fetch_week_stat(db_connection, utils.get_last_week_monday())
 
                     user_overall_profits, user_week_profits = calculate_week_user_profits(
-                        actual_overall_balance=overall_balance,
-                        last_week_overall_balance=last_week_stat[1],
-                        user_balances=user_balances,
+                        actual_overall_balance=data["overall_balance"],
+                        last_week_user_balances=user_balances,
                         last_week_user_overall_profits=json.loads(last_week_stat[6]),
                     )
 
@@ -84,7 +81,7 @@ def scrap_data_process():
                         weeks_stats_table.insert_week_profit(
                             db_connection=db_connection,
                             monday_date=get_current_week_monday(),
-                            overall_balance=overall_balance,
+                            overall_balance=data["overall_balance"],
                             overall_profit=data["profit"],
                             current_week_profit=data["current_week_profit"],
                             profit_percents=data["profit_percents"],
