@@ -1,6 +1,7 @@
 import json
 import time
 import traceback
+from datetime import datetime
 
 from bs4 import BeautifulSoup
 from pyppeteer import launch
@@ -92,6 +93,7 @@ def update_user_balances(db_connection, user_week_profits):
 def scrap_data_process():
     db_connection = create_db_connection()
     while True:
+        current_date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         is_current_week_stat_not_in_db = weeks_stats_table.fetch_week_stat(
             db_connection, utils.get_current_week_monday()
         ) is None
@@ -107,11 +109,13 @@ def scrap_data_process():
                     save_week_stat(db_connection, week_data, user_overall_profits, user_week_profits)
                     update_user_balances(db_connection, user_week_profits)
 
-                    print('Data was scrapped successfully!')
+                    print(f'{current_date} Data was scrapped successfully!')
                 else:
-                    print("Data was not scrapped :(")
+                    print(f"{current_date} Data was not scrapped :(")
             except Exception:
                 traceback.print_exc()
-                print("Error while scrapping data!")
+                print(f"{current_date} Error while scrapping data!")
+        else:
+            print(f"{current_date} Data was already scrapped")
 
         time.sleep(600)
