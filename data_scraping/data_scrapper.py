@@ -57,40 +57,55 @@ async def scrap_data():
     }
 
 
+def save_week_stat(db_connection, week_data, user_overall_profits, user_week_profits):
+    weeks_stats_table.insert_week_profit(
+        db_connection=db_connection,
+        monday_date=get_current_week_monday(),
+        overall_balance=week_data["overall_balance"],
+        overall_profit=week_data["profit"],
+        current_week_profit=week_data["current_week_profit"],
+        profit_percents=week_data["profit_percents"],
+        current_week_profit_percents=week_data["current_week_profit_percents"],
+        user_overall_profits=json.dumps(user_overall_profits),
+        user_week_profits=json.dumps(user_week_profits),
+    )
+
+
+def get_current_week_profits(db_connection, actual_overall_balance):
+    user_balances = users_rights_table.fetch_user_balances(db_connection)
+    last_week_stat = weeks_stats_table.fetch_week_stat(db_connection, utils.get_last_week_monday())
+
+    user_overall_profits, user_week_profits = calculate_week_user_profits(
+        actual_overall_balance=actual_overall_balance,
+        last_week_user_balances=user_balances,
+        last_week_user_overall_profits=json.loads(last_week_stat[6]),
+    )
+
+    return user_overall_profits, user_week_profits
+
+
+def update_user_balances(db_connection, user_week_profits):
+    for user_tag, user_week_profit in user_week_profits.items():
+        users_rights_table.update_balance(db_connection, user_tag, user_week_profit)
+
+
 def scrap_data_process():
     db_connection = create_db_connection()
     while True:
-        if is_today_weekends():
-            try:
-                data = asyncio.run(scrap_data())
-                if data:
-                    user_balances = users_rights_table.fetch_user_balances(db_connection)
-                    last_week_stat = weeks_stats_table.fetch_week_stat(db_connection, utils.get_last_week_monday())
+        is_current_week_stat_not_in_db = weeks_stats_table.fetch_week_stat(
+            db_connection, utils.get_current_week_monday()
+        ) is None
 
-                    user_overall_profits, user_week_profits = calculate_week_user_profits(
-                        actual_overall_balance=data["overall_balance"],
-                        last_week_user_balances=user_balances,
-                        last_week_user_overall_profits=json.loads(last_week_stat[6]),
+        if is_today_weekends() and is_current_week_stat_not_in_db:
+            try:
+                week_data = asyncio.run(scrap_data())
+                if week_data:
+                    user_overall_profits, user_week_profits = get_current_week_profits(
+                        db_connection, week_data["overall_balance"]
                     )
 
-                    is_current_week_stat_not_in_db = weeks_stats_table.fetch_week_stat(
-                        db_connection, utils.get_current_week_monday()
-                    ) is None
-
-                    if is_current_week_stat_not_in_db:
-                        weeks_stats_table.insert_week_profit(
-                            db_connection=db_connection,
-                            monday_date=get_current_week_monday(),
-                            overall_balance=data["overall_balance"],
-                            overall_profit=data["profit"],
-                            current_week_profit=data["current_week_profit"],
-                            profit_percents=data["profit_percents"],
-                            current_week_profit_percents=data["current_week_profit_percents"],
-                            user_overall_profits=json.dumps(user_overall_profits),
-                            user_week_profits=json.dumps(user_week_profits),
-                        )
-                        for user_tag, user_week_profit in user_week_profits.items():
-                            users_rights_table.update_balance(db_connection, user_tag, user_week_profit)
+                    save_week_stat(db_connection, week_data, user_overall_profits, user_week_profits)
+                    update_user_balances(db_connection, user_week_profits)
 
                     print('Data was scrapped successfully!')
                 else:
