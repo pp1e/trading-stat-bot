@@ -26,3 +26,13 @@ def is_today_weekends():
         return True
 
     return False
+
+
+def get_string_last_week_monday():
+    last_monday = get_current_week_monday() - datetime.timedelta(days=7)
+    last_monday = last_monday.strftime("%Y-%m-%d")
+    return last_monday
+
+
+def get_last_week_sunday():
+    return get_current_week_monday() - datetime.timedelta(days=1)
