@@ -7,3 +7,5 @@ WAIT_DEPOSIT = 1
 
 DEPOSIT_ACTION = 'deposit'
 WITHDRAW_ACTION = 'withdraw'
+
+BOT_START_DATE = '2023-08-21'

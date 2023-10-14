@@ -48,3 +48,4 @@ def fetch_week_number(db_connection, week_monday):
                    f" stat WHERE date = ?", (week_monday,))
     number_of_week = cursor.fetchone()[1] - 1
     return number_of_week
+

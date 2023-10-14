@@ -8,6 +8,8 @@ from telegram_bot.entities.week_stat import WeekStat
 from database import users_rights_table
 from database import weeks_stats_table
 
+from telegram_bot.message_generators.welcome_message_generator import send_welcome_message
+
 
 def handle_view_last_statistic(chat_id, bot, db_connection):
     week_stat = get_week_statistic(db_connection)
@@ -19,6 +21,8 @@ def handle_view_last_statistic(chat_id, bot, db_connection):
         caption=message,
         parse_mode='html',
     )
+
+    send_welcome_message(bot=bot, chat_id=chat_id)
 
 
 def handle_view_specified_statistic(chat_id, bot, db_connection, week_date):
@@ -37,6 +41,8 @@ def handle_view_specified_statistic(chat_id, bot, db_connection, week_date):
         caption=message,
         parse_mode='html',
     )
+
+    send_welcome_message(bot=bot, chat_id=chat_id)
 
 
 def get_week_statistic(db_connection, week_date=None):
