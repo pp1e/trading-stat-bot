@@ -1,6 +1,6 @@
 from database import users_rights_table
 
-from tg_bot.message_generators.user_rights_message_generator import send_user_rights
+from telegram_bot.message_generators.user_rights_message_generator import send_user_rights
 
 
 def handle_interact_with_deposit(chat_id, bot, db_connection, username):

@@ -3,8 +3,8 @@ from datetime import datetime
 
 import utils
 from config.storage_config import STORAGE_CONFIG
-from tg_bot.message_generators import week_statistic_generator
-from tg_bot.entities.week_stat import WeekStat
+from telegram_bot.message_generators import week_statistic_generator
+from telegram_bot.entities.week_stat import WeekStat
 from database import users_rights_table
 from database import weeks_stats_table
 

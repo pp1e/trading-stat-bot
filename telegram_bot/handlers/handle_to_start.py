@@ -1,4 +1,4 @@
-from tg_bot.message_generators.welcome_message_generator import send_welcome_message
+from telegram_bot.message_generators.welcome_message_generator import send_welcome_message
 from constants import SELECT_ACTION
 
 

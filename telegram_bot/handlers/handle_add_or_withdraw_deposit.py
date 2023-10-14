@@ -1,5 +1,5 @@
 from database import users_rights_table
-from tg_bot.message_generators.operation_type_message_generator import send_operation_type_message
+from telegram_bot.message_generators.operation_type_message_generator import send_operation_type_message
 from constants import DEPOSIT_ACTION
 
 

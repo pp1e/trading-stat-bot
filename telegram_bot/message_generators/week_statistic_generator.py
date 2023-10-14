@@ -1,7 +1,7 @@
 import datetime
 from num2words import num2words
 
-from tg_bot.entities.week_stat import WeekStat
+from telegram_bot.entities.week_stat import WeekStat
 
 
 def form_week_statistic_message(week_stat: WeekStat):

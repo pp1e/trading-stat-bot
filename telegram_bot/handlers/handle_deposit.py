@@ -1,7 +1,7 @@
 from constants import DEPOSIT_ACTION, WITHDRAW_ACTION, SELECT_ACTION
 from database import users_rights_table
 
-from tg_bot.message_generators.welcome_message_generator import send_welcome_message
+from telegram_bot.message_generators.welcome_message_generator import send_welcome_message
 
 
 def handle_deposit(message, bot, db_connection, username, user_states, username_pays, operation_type):

@@ -1,5 +1,5 @@
 from database.create_connection import create_db_connection
-from tg_bot.bot import TradingStatBot
+from telegram_bot.trading_stat_bot import TradingStatBot
 from multiprocessing import Process
 from data_scraping import data_scrapper
 

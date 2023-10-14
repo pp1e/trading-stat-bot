@@ -3,16 +3,16 @@ from config.bot_config import BOT_CONFIG
 
 from constants import DEPOSIT_ACTION, WITHDRAW_ACTION, SELECT_ACTION, WAIT_DEPOSIT
 
-from tg_bot.handlers.handle_start_command import handle_start_command
-from tg_bot.handlers.handle_week_stat import handle_view_statistic
-from tg_bot.handlers.handle_interact_with_deposit import handle_interact_with_deposit
-from tg_bot.handlers.handle_add_or_withdraw_deposit import handle_add_or_withdraw_deposit
-from tg_bot.handlers.handle_to_start import handle_to_start
-from tg_bot.handlers.handle_select_user import handle_select_user
-from tg_bot.handlers.handle_view_user_deposits import handle_view_user_deposits
-from tg_bot.handlers.handle_deposit import handle_deposit
+from telegram_bot.handlers.handle_start_command import handle_start_command
+from telegram_bot.handlers.handle_week_stat import handle_view_statistic
+from telegram_bot.handlers.handle_interact_with_deposit import handle_interact_with_deposit
+from telegram_bot.handlers.handle_add_or_withdraw_deposit import handle_add_or_withdraw_deposit
+from telegram_bot.handlers.handle_to_start import handle_to_start
+from telegram_bot.handlers.handle_select_user import handle_select_user
+from telegram_bot.handlers.handle_view_user_deposits import handle_view_user_deposits
+from telegram_bot.handlers.handle_deposit import handle_deposit
 
-from tg_bot.entities.bot_commands import BotCommands
+from telegram_bot.entities.bot_commands import BotCommands
 
 
 class TradingStatBot:

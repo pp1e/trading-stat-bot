@@ -1,6 +1,6 @@
-from tg_bot.entities.bot_commands import BotCommands
+from telegram_bot.entities.bot_commands import BotCommands
 
-from tg_bot.message_generators.create_buttons import create_buttons
+from telegram_bot.message_generators.create_buttons import create_buttons
 
 
 def send_operation_type_message(bot, chat_id, users, message):
