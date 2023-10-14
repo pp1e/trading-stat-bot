@@ -4,7 +4,7 @@ from num2words import num2words
 from telegram_bot.entities.week_stat import WeekStat
 
 
-def form_week_statistic_message(week_stat: WeekStat):
+def form_week_statistic_message(week_stat: WeekStat, add_balances=False):
 
     rus_start_week_date, rus_end_week_date, rus_week_number = form_data_to_russian_style(
         start_week_date=week_stat.monday_date, week_number=week_stat.week_number
@@ -19,7 +19,8 @@ def form_week_statistic_message(week_stat: WeekStat):
         user_balance = week_stat.user_balances[userTag]
         user_overall_profit = week_stat.user_overall_profits[userTag]
         message += f"🔹<b>{userTag}: +${round(week_stat.user_week_profits[userTag], 2)}</b>\n"
-        message += f"Текущий баланс: ${round(user_balance, 2)}\n"
+        if add_balances:
+            message += f"Текущий баланс: ${round(user_balance, 2)}\n"
         message += f"Общая прибыль: +${round(user_overall_profit, 2)}\n\n"
 
     message += (f"<b>Всего:</b> ${round(week_stat.overall_balance - week_stat.profit, 2)}"

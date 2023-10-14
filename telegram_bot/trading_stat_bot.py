@@ -1,10 +1,13 @@
 import telebot
+from telegram_bot_calendar import DetailedTelegramCalendar
+
 from config.bot_config import BOT_CONFIG
 
 from constants import DEPOSIT_ACTION, WITHDRAW_ACTION, SELECT_ACTION, WAIT_DEPOSIT
 
 from telegram_bot.handlers.handle_start_command import handle_start_command
-from telegram_bot.handlers.handle_week_stat import handle_view_statistic
+from telegram_bot.handlers.handle_week_stat import handle_view_last_statistic, handle_view_specified_statistic
+from telegram_bot.handlers.handle_calendar_interact import handle_select_date, handle_create_calendar
 from telegram_bot.handlers.handle_interact_with_deposit import handle_interact_with_deposit
 from telegram_bot.handlers.handle_add_or_withdraw_deposit import handle_add_or_withdraw_deposit
 from telegram_bot.handlers.handle_to_start import handle_to_start
@@ -37,12 +40,32 @@ class TradingStatBot:
                     user_states=self.user_states
                 ))
 
-        @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_STATISTIC.value)
-        def view_statistic_callback(call):
-            handle_view_statistic(
+        @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_LAST_STATISTIC.value)
+        def view_last_statistic_callback(call):
+            handle_view_last_statistic(
                 chat_id=call.message.chat.id,
                 bot=self.bot,
                 db_connection=self.db_connection
+            )
+
+        @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_SPECIFIED_STATISTIC.value)
+        def view_specified_statistic_callback(call):
+            handle_create_calendar(
+                bot=self.bot,
+                chat_id=call.message.chat.id
+            )
+
+        @self.bot.callback_query_handler(func=DetailedTelegramCalendar.func())
+        def select_date_callback(call):
+            handle_select_date(
+                bot=self.bot,
+                call=call,
+                on_date_selected=lambda date: handle_view_specified_statistic(
+                    db_connection=self.db_connection,
+                    chat_id=call.message.chat.id,
+                    bot=self.bot,
+                    week_date=date
+                )
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.INTERACT_WITH_DEPOSIT.value)

@@ -9,9 +9,9 @@ from database import users_rights_table
 from database import weeks_stats_table
 
 
-def handle_view_statistic(chat_id, bot, db_connection):
+def handle_view_last_statistic(chat_id, bot, db_connection):
     week_stat = get_week_statistic(db_connection)
-    message = week_statistic_generator.form_week_statistic_message(week_stat)
+    message = week_statistic_generator.form_week_statistic_message(week_stat, add_balances=True)
 
     bot.send_photo(
         chat_id=chat_id,
@@ -21,12 +21,37 @@ def handle_view_statistic(chat_id, bot, db_connection):
     )
 
 
-def get_week_statistic(db_connection):
-    week_data = get_latest_week_data(db_connection)
+def handle_view_specified_statistic(chat_id, bot, db_connection, week_date):
+    week_stat = get_week_statistic(db_connection, week_date)
+    if week_stat is None:
+        bot.send_message(
+            chat_id=chat_id,
+            text="За эту неделю нету статистики 😞"
+        )
+        return
+
+    message = week_statistic_generator.form_week_statistic_message(week_stat)
+    bot.send_photo(
+        chat_id=chat_id,
+        photo=week_stat.screenshot,
+        caption=message,
+        parse_mode='html',
+    )
+
+
+def get_week_statistic(db_connection, week_date=None):
+    if week_date:
+        week_monday = utils.get_monday_by_week_date(week_date)
+        week_data = weeks_stats_table.fetch_week_stat(db_connection, week_monday)
+    else:
+        week_data = get_latest_week_data(db_connection)
+        week_monday = datetime.fromisoformat(week_data[0]).date()
+
+    if week_data is None:
+        return None
 
     user_balances = users_rights_table.fetch_user_balances(db_connection)
-    week_number = weeks_stats_table.fetch_week_number(db_connection)
-    week_monday = datetime.fromisoformat(week_data[0]).date()
+    week_number = weeks_stats_table.fetch_week_number(db_connection, week_monday)
 
     return WeekStat(
         monday_date=week_monday,

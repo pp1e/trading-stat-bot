@@ -40,9 +40,11 @@ def fetch_week_stat(db_connection, date):
     return last_row
 
 
-def fetch_week_number(db_connection):
+def fetch_week_number(db_connection, week_monday):
     cursor = db_connection.cursor()
 
-    cursor.execute("SELECT COUNT(*) FROM weeks_stats")
-    number_of_week = cursor.fetchone()[0] - 1
+    cursor.execute(f"SELECT stat.date, stat.row_number FROM "
+                   f"(SELECT ROW_NUMBER() OVER (ORDER BY date) AS row_number, date FROM weeks_stats)"
+                   f" stat WHERE date = ?", (week_monday,))
+    number_of_week = cursor.fetchone()[1] - 1
     return number_of_week

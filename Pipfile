@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 pyTelegramBotAPI = "*"
+python-telegram-bot-calendar = "*"
 requests = "*"
 selenium = "*"
 beautifulsoup4 = "*"
