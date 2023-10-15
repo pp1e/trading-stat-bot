@@ -26,14 +26,13 @@ class TradingStatBot:
         self.operation_type = None
         self.username_pays = ''
         self.user_states = {}
-        self.username = None
 
         self.initialize_handlers()
 
     def initialize_handlers(self):
         @self.bot.message_handler(commands=[BotCommands.START.value])
         def start(message):
-            self.username, self.user_states = (
+            self.user_states = (
                 handle_start_command(
                     message=message,
                     bot=self.bot,
@@ -83,8 +82,6 @@ class TradingStatBot:
             handle_interact_with_deposit(
                 chat_id=call.message.chat.id,
                 bot=self.bot,
-                db_connection=self.db_connection,
-                username=self.username
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.ADD_DEPOSIT.value)
@@ -120,7 +117,7 @@ class TradingStatBot:
         def to_start_callback(call):
             self.user_states = handle_to_start(
                 chat_id=call.message.chat.id,
-                username=self.username,
+                username=call.from_user.username,
                 user_states=self.user_states,
                 bot=self.bot
             )
@@ -132,7 +129,7 @@ class TradingStatBot:
                     call=call,
                     bot=self.bot,
                     user_states=self.user_states,
-                    username=self.username,
+                    username=call.from_user.username,
                     operation_type=self.operation_type
                 ))
 
@@ -145,19 +142,19 @@ class TradingStatBot:
             )
 
         @self.bot.message_handler(
-            func=lambda message: self.user_states.get(self.username) == WAIT_DEPOSIT)
+            func=lambda message: self.user_states.get(message.from_user.username) == WAIT_DEPOSIT)
         def deposit_callback(message):
             self.user_states = (
                 handle_deposit(
                     message=message,
                     bot=self.bot,
                     db_connection=self.db_connection,
-                    username=self.username,
+                    username=message.from_user.username,
                     user_states=self.user_states,
                     username_pays=self.username_pays,
                     operation_type=self.operation_type
                 ))
 
-        @self.bot.message_handler(func=lambda message: self.user_states.get(self.username) == SELECT_ACTION)
+        @self.bot.message_handler(func=lambda message: self.user_states.get(message.from_user.username) == SELECT_ACTION)
         def echo_message_callback(message):
             self.bot.send_message(message.chat.id, 'Хозяин еще не научил меня этому :(')
