@@ -9,12 +9,13 @@ from telegram_bot.handlers.handle_start_command import handle_start_command
 from telegram_bot.handlers.handle_week_stat import handle_view_last_statistic, handle_view_specified_statistic
 from telegram_bot.handlers.handle_calendar_interact import handle_select_date, handle_create_calendar
 from telegram_bot.handlers.handle_interact_with_deposit import handle_interact_with_deposit
+from telegram_bot.handlers.handle_view_statistic import handle_view_statistic
 from telegram_bot.handlers.handle_add_or_withdraw_deposit import handle_add_or_withdraw_deposit
 from telegram_bot.handlers.handle_to_start import handle_to_start
 from telegram_bot.handlers.handle_select_user import handle_select_user
 from telegram_bot.handlers.handle_view_user_deposits import handle_view_user_deposits
 from telegram_bot.handlers.handle_deposit import handle_deposit
-
+from telegram_bot.handlers.handle_average_dollar_price import handle_average_dollar_price
 from telegram_bot.entities.bot_commands import BotCommands
 
 
@@ -40,7 +41,16 @@ class TradingStatBot:
                     user_states=self.user_states
                 ))
 
-        @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_LAST_STATISTIC.value)
+        @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_STATISTIC.value)
+        def view_statistic_callback(call):
+            handle_view_statistic(
+                chat_id=call.message.chat.id,
+                bot=self.bot,
+                db_connection=self.db_connection,
+                username=self.username
+            )
+
+        @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_ACTUAL_STATISTIC.value)
         def view_last_statistic_callback(call):
             handle_view_last_statistic(
                 chat_id=call.message.chat.id,
@@ -95,6 +105,15 @@ class TradingStatBot:
                 bot=self.bot,
                 db_connection=self.db_connection,
                 operation_type=self.operation_type
+            )
+
+        @self.bot.callback_query_handler(
+            func=lambda call: call.data == BotCommands.VIEW_AVERAGE_PURCHASE_DOLLAR_PRICE.value)
+        def view_average_dollar_price(call):
+            handle_average_dollar_price(
+                bot=self.bot,
+                chat_id=call.message.chat.id,
+                db_connection=self.db_connection
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.TO_START.value)
