@@ -33,7 +33,10 @@ def is_user_admin(db_connection, username):
 
     cursor.execute("SELECT role FROM users_rights WHERE telegram_tag = ?", (username,))
     role = cursor.fetchone()
-    if role[0] == ADMIN_ROLE:
+
+    if role is None:
+        return False
+    elif role[0] == ADMIN_ROLE:
         return True
     else:
         return False
