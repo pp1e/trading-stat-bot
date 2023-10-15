@@ -11,4 +11,4 @@ def handle_start_command(message, bot, db_connection, user_states):
 
     send_welcome_message(bot=bot, chat_id=message.chat.id)
 
-    return username, user_states
+    return user_states
