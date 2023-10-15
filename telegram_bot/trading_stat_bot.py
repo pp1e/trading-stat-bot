@@ -8,8 +8,6 @@ from constants import DEPOSIT_ACTION, WITHDRAW_ACTION, SELECT_ACTION, WAIT_DEPOS
 from telegram_bot.handlers.handle_start_command import handle_start_command
 from telegram_bot.handlers.handle_week_stat import handle_view_last_statistic, handle_view_specified_statistic
 from telegram_bot.handlers.handle_calendar_interact import handle_select_date, handle_create_calendar
-from telegram_bot.handlers.handle_view_deposit_menu import handle_view_deposit_menu
-from telegram_bot.handlers.handle_view_statistic_menu import handle_view_statistic_menu
 from telegram_bot.handlers.handle_add_or_withdraw_deposit import handle_add_or_withdraw_deposit
 from telegram_bot.handlers.handle_to_start import handle_to_start
 from telegram_bot.handlers.handle_select_user import handle_select_user
@@ -17,6 +15,8 @@ from telegram_bot.handlers.handle_view_user_deposits import handle_view_user_dep
 from telegram_bot.handlers.handle_deposit import handle_deposit
 from telegram_bot.handlers.handle_average_dollar_price import handle_average_dollar_price
 from telegram_bot.entities.bot_commands import BotCommands
+
+from telegram_bot.decorators import admin_required_factory
 
 
 class TradingStatBot:
@@ -31,6 +31,7 @@ class TradingStatBot:
 
     def initialize_handlers(self):
         @self.bot.message_handler(commands=[BotCommands.START.value])
+        @admin_required_factory(db_connection=self.db_connection, bot=self.bot)
         def start(message):
             self.user_states = (
                 handle_start_command(
@@ -41,6 +42,7 @@ class TradingStatBot:
                 ))
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_STATISTIC.value)
+        @admin_required_factory(db_connection=self.db_connection, bot=self.bot)
         def view_statistic_menu_callback(call):
             handle_view_statistic_menu(
                 chat_id=call.message.chat.id,
@@ -56,6 +58,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_SPECIFIED_STATISTIC.value)
+        @admin_required_factory(db_connection=self.db_connection, bot=self.bot)
         def view_specified_statistic_callback(call):
             handle_create_calendar(
                 bot=self.bot,
@@ -63,6 +66,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=DetailedTelegramCalendar.func())
+        @admin_required_factory(db_connection=self.db_connection, bot=self.bot)
         def select_date_callback(call):
             handle_select_date(
                 bot=self.bot,
@@ -76,6 +80,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.INTERACT_WITH_DEPOSIT.value)
+        @admin_required_factory(db_connection=self.db_connection, bot=self.bot)
         def view_deposit_menu_callback(call):
             handle_view_deposit_menu(
                 chat_id=call.message.chat.id,
@@ -83,6 +88,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.ADD_DEPOSIT.value)
+        @admin_required_factory(db_connection=self.db_connection, bot=self.bot)
         def add_deposit_callback(call):
             self.operation_type = DEPOSIT_ACTION
             handle_add_or_withdraw_deposit(
@@ -93,6 +99,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.WITHDRAW_MONEY.value)
+        @admin_required_factory(db_connection=self.db_connection, bot=self.bot)
         def withdraw_money_callback(call):
             self.operation_type = WITHDRAW_ACTION
             handle_add_or_withdraw_deposit(
@@ -112,6 +119,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.TO_START.value)
+        @admin_required_factory(db_connection=self.db_connection, bot=self.bot)
         def to_start_callback(call):
             self.user_states = handle_to_start(
                 chat_id=call.message.chat.id,
@@ -121,6 +129,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data.startswith(BotCommands.SELECT_USER.value))
+        @admin_required_factory(db_connection=self.db_connection, bot=self.bot)
         def select_user_callback(call):
             self.user_states, self.username_pays = (
                 handle_select_user(
@@ -132,6 +141,7 @@ class TradingStatBot:
                 ))
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_USER_DEPOSITS.value)
+        @admin_required_factory(db_connection=self.db_connection, bot=self.bot)
         def view_user_deposits_callback(call):
             handle_view_user_deposits(
                 chat_id=call.message.chat.id,
@@ -141,6 +151,7 @@ class TradingStatBot:
 
         @self.bot.message_handler(
             func=lambda message: self.user_states.get(message.from_user.username) == WAIT_DEPOSIT)
+        @admin_required_factory(db_connection=self.db_connection, bot=self.bot)
         def deposit_callback(message):
             self.user_states = (
                 handle_deposit(
@@ -154,5 +165,6 @@ class TradingStatBot:
                 ))
 
         @self.bot.message_handler(func=lambda message: self.user_states.get(message.from_user.username) == SELECT_ACTION)
+        @admin_required_factory(db_connection=self.db_connection, bot=self.bot)
         def echo_message_callback(message):
             self.bot.send_message(message.chat.id, 'Хозяин еще не научил меня этому :(')
