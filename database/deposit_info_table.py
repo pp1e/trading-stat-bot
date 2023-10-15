@@ -19,3 +19,14 @@ def create_table(db_connection):
         ''')
 
     db_connection.commit()
+
+
+def fetch_user_deposits(db_connection):
+    cursor = db_connection.cursor()
+
+    cursor.execute("SELECT telegram_tag, SUM(user_rubles_deposit), SUM(dollar_amount) "
+                   "FROM deposits_info GROUP BY telegram_tag")
+
+    query_result = cursor.fetchall()
+
+    return query_result

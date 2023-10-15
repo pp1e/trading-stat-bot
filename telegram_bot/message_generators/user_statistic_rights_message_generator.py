@@ -3,12 +3,12 @@ from telegram_bot.entities.bot_commands import BotCommands
 from telegram_bot.message_generators.create_buttons import create_buttons
 
 
-def send_user_rights(bot, chat_id):
+def send_user_statistic_rights(bot, chat_id):
     markup = create_buttons(
         button_parameters={
-            'Пополнить баланс': BotCommands.ADD_DEPOSIT.value,
-            'Снять деньги': BotCommands.WITHDRAW_MONEY.value,
-            'Посмотреть информацию о балансах': BotCommands.VIEW_USER_DEPOSITS.value,
+            'Актуальная статистика': BotCommands.VIEW_ACTUAL_STATISTIC.value,
+            'Статистика за выбранную неделю': BotCommands.VIEW_SPECIFIED_STATISTIC.value,
+            'Средняя цена закупки доллара': BotCommands.VIEW_AVERAGE_PURCHASE_DOLLAR_PRICE.value,
             'Вернуться назад': BotCommands.TO_START.value
         }
     )
