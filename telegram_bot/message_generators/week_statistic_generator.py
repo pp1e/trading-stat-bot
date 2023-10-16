@@ -1,6 +1,6 @@
 import datetime
 from num2words import num2words
-
+from config.bot_config import BOT_CONFIG
 from telegram_bot.entities.week_stat import WeekStat
 
 
@@ -26,7 +26,7 @@ def form_week_statistic_message(week_stat: WeekStat, add_balances=False):
     message += (f"<b>Всего:</b> ${round(week_stat.overall_balance - week_stat.profit, 2)}"
                 f" -> ${round(week_stat.overall_balance, 2)}\n")
     message += f"<b>Прибыль:</b> ${round(week_stat.profit, 2)}\n\n"
-    message += '<a href="https://fxmonitor.online/u/UQEvKqKD?view=pro">СЛЕДИТЬ</a>'
+    message += f'<a href="{BOT_CONFIG["""fx_monitor"""]}">СЛЕДИТЬ</a>'
 
     return message
 
