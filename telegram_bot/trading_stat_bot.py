@@ -28,14 +28,14 @@ class TradingStatBot:
         self.operation_type = None
         self.username_pays = ''
         self.user_states = {}
-        self.admin_message_required = admin_message_required_factory(db_connection=self.db_connection, bot=self.bot)
-        self.admin_call_required = admin_call_required_factory(db_connection=self.db_connection, bot=self.bot)
+        self.admin_required_message = admin_message_required_factory(db_connection=self.db_connection, bot=self.bot)
+        self.admin_required_call = admin_call_required_factory(db_connection=self.db_connection, bot=self.bot)
 
         self.initialize_handlers()
 
     def initialize_handlers(self):
         @self.bot.message_handler(commands=[BotCommands.START.value])
-        @self.admin_message_required
+        @self.admin_required_message
         def start(message):
             self.user_states = (
                 handle_start_command(
@@ -46,7 +46,7 @@ class TradingStatBot:
                 ))
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_STATISTIC.value)
-        @self.admin_call_required
+        @self.admin_required_call
         def view_statistic_menu_callback(call):
             handle_view_statistic_menu(
                 chat_id=call.message.chat.id,
@@ -54,7 +54,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_ACTUAL_STATISTIC.value)
-        @self.admin_call_required
+        @self.admin_required_call
         def view_last_statistic_callback(call):
             handle_view_last_statistic(
                 chat_id=call.message.chat.id,
@@ -63,7 +63,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_SPECIFIED_STATISTIC.value)
-        @self.admin_call_required
+        @self.admin_required_call
         def view_specified_statistic_callback(call):
             handle_create_calendar(
                 bot=self.bot,
@@ -71,7 +71,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=DetailedTelegramCalendar.func())
-        @self.admin_call_required
+        @self.admin_required_call
         def select_date_callback(call):
             handle_select_date(
                 bot=self.bot,
@@ -85,7 +85,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.INTERACT_WITH_DEPOSIT.value)
-        @self.admin_call_required
+        @self.admin_required_call
         def view_deposit_menu_callback(call):
             handle_view_deposit_menu(
                 chat_id=call.message.chat.id,
@@ -93,7 +93,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.ADD_DEPOSIT.value)
-        @self.admin_call_required
+        @self.admin_required_call
         def add_deposit_callback(call):
             self.operation_type = DEPOSIT_ACTION
             handle_add_or_withdraw_deposit(
@@ -104,7 +104,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.WITHDRAW_MONEY.value)
-        @self.admin_call_required
+        @self.admin_required_call
         def withdraw_money_callback(call):
             self.operation_type = WITHDRAW_ACTION
             handle_add_or_withdraw_deposit(
@@ -116,7 +116,7 @@ class TradingStatBot:
 
         @self.bot.callback_query_handler(
             func=lambda call: call.data == BotCommands.VIEW_AVERAGE_PURCHASE_DOLLAR_PRICE.value)
-        @self.admin_call_required
+        @self.admin_required_call
         def view_average_dollar_price(call):
             handle_average_dollar_price(
                 bot=self.bot,
@@ -125,7 +125,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.TO_START.value)
-        @self.admin_call_required
+        @self.admin_required_call
         def to_start_callback(call):
             self.user_states = handle_to_start(
                 chat_id=call.message.chat.id,
@@ -135,7 +135,7 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data.startswith(BotCommands.SELECT_USER.value))
-        @self.admin_call_required
+        @self.admin_required_call
         def select_user_callback(call):
             self.user_states, self.username_pays = (
                 handle_select_user(
@@ -147,7 +147,7 @@ class TradingStatBot:
                 ))
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_USER_DEPOSITS.value)
-        @self.admin_call_required
+        @self.admin_required_call
         def view_user_deposits_callback(call):
             handle_view_user_deposits(
                 chat_id=call.message.chat.id,
@@ -157,7 +157,7 @@ class TradingStatBot:
 
         @self.bot.message_handler(
             func=lambda message: self.user_states.get(message.from_user.username) == WAIT_DEPOSIT)
-        @self.admin_message_required
+        @self.admin_required_message
         def deposit_callback(message):
             self.user_states = (
                 handle_deposit(
@@ -171,6 +171,6 @@ class TradingStatBot:
                 ))
 
         @self.bot.message_handler(func=lambda message: self.user_states.get(message.from_user.username) == SELECT_ACTION)
-        @self.admin_message_required
+        @self.admin_required_message
         def echo_message_callback(message):
             self.bot.send_message(message.chat.id, 'Хозяин еще не научил меня этому :(')

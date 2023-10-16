@@ -1,4 +1,4 @@
-from constants import NONAME_ROLE, ADMIN_ROLE
+from constants import NONAME_ROLE
 
 
 def create_table(db_connection):
@@ -28,18 +28,12 @@ def add_new_user(db_connection, username):
     db_connection.commit()
 
 
-def is_user_admin(db_connection, username):
+def fetch_user_role(db_connection, username):
     cursor = db_connection.cursor()
 
     cursor.execute("SELECT role FROM users_rights WHERE telegram_tag = ?", (username,))
     role = cursor.fetchone()
-
-    if role is None:
-        return False
-    elif role[0] == ADMIN_ROLE:
-        return True
-    else:
-        return False
+    return role
 
 
 def fetch_user_tags(db_connection):
