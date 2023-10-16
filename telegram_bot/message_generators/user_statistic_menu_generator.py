@@ -3,7 +3,7 @@ from telegram_bot.entities.bot_commands import BotCommands
 from telegram_bot.message_generators.create_buttons import create_buttons
 
 
-def send_user_statistic_rights(bot, chat_id):
+def send_user_statistic_menu(bot, chat_id):
     markup = create_buttons(
         button_parameters={
             'Актуальная статистика': BotCommands.VIEW_ACTUAL_STATISTIC.value,
