@@ -25,8 +25,7 @@ class TradingStatBot:
     def __init__(self, db_connection):
         self.db_connection = db_connection
         self.bot = telebot.TeleBot(BOT_CONFIG['token'])
-        self.operation_type = None
-        self.username_pays = ''
+        self.unique_user_transaction = {}
         self.user_states = {}
         self.admin_required_message = admin_message_required_factory(db_connection=self.db_connection, bot=self.bot)
         self.admin_required_call = admin_call_required_factory(db_connection=self.db_connection, bot=self.bot)
@@ -87,6 +86,7 @@ class TradingStatBot:
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.INTERACT_WITH_DEPOSIT.value)
         @self.admin_required_call
         def view_deposit_menu_callback(call):
+            self.unique_user_transaction[call.from_user.username] = {}
             handle_view_deposit_menu(
                 chat_id=call.message.chat.id,
                 bot=self.bot,
@@ -95,23 +95,23 @@ class TradingStatBot:
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.ADD_DEPOSIT.value)
         @self.admin_required_call
         def add_deposit_callback(call):
-            self.operation_type = DEPOSIT_ACTION
+            self.unique_user_transaction[call.from_user.username]['operation_type'] = DEPOSIT_ACTION
             handle_add_or_withdraw_deposit(
                 chat_id=call.message.chat.id,
                 bot=self.bot,
                 db_connection=self.db_connection,
-                operation_type=self.operation_type
+                operation_type=self.unique_user_transaction[call.from_user.username]['operation_type']
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.WITHDRAW_MONEY.value)
         @self.admin_required_call
         def withdraw_money_callback(call):
-            self.operation_type = WITHDRAW_ACTION
+            self.unique_user_transaction[call.from_user.username]['operation_type'] = WITHDRAW_ACTION
             handle_add_or_withdraw_deposit(
                 chat_id=call.message.chat.id,
                 bot=self.bot,
                 db_connection=self.db_connection,
-                operation_type=self.operation_type
+                operation_type=self.unique_user_transaction[call.from_user.username]['operation_type']
             )
 
         @self.bot.callback_query_handler(
@@ -127,23 +127,24 @@ class TradingStatBot:
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.TO_START.value)
         @self.admin_required_call
         def to_start_callback(call):
-            self.user_states = handle_to_start(
+            self.user_states, self.unique_user_transaction = handle_to_start(
                 chat_id=call.message.chat.id,
                 username=call.from_user.username,
                 user_states=self.user_states,
-                bot=self.bot
+                bot=self.bot,
+                unique_user_transaction=self.unique_user_transaction
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data.startswith(BotCommands.SELECT_USER.value))
         @self.admin_required_call
         def select_user_callback(call):
-            self.user_states, self.username_pays = (
+            self.unique_user_transaction[call.from_user.username] = (
                 handle_select_user(
                     call=call,
                     bot=self.bot,
                     user_states=self.user_states,
                     username=call.from_user.username,
-                    operation_type=self.operation_type
+                    unique_user_transaction=self.unique_user_transaction[call.from_user.username]
                 ))
 
         @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_USER_DEPOSITS.value)
@@ -159,15 +160,14 @@ class TradingStatBot:
             func=lambda message: self.user_states.get(message.from_user.username) == WAIT_DEPOSIT)
         @self.admin_required_message
         def deposit_callback(message):
-            self.user_states = (
+            self.user_states, self.unique_user_transaction = (
                 handle_deposit(
                     message=message,
                     bot=self.bot,
                     db_connection=self.db_connection,
                     username=message.from_user.username,
                     user_states=self.user_states,
-                    username_pays=self.username_pays,
-                    operation_type=self.operation_type
+                    unique_user_transaction=self.unique_user_transaction
                 ))
 
         @self.bot.message_handler(func=lambda message: self.user_states.get(message.from_user.username) == SELECT_ACTION)
