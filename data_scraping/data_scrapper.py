@@ -8,6 +8,7 @@ from pyppeteer import launch
 import asyncio
 
 import utils
+from config.bot_config import BOT_CONFIG
 from config.storage_config import STORAGE_CONFIG
 from database.create_connection import create_db_connection
 from database import users_rights_table
@@ -25,7 +26,7 @@ def percents_to_number(percents):
 
 
 async def scrap_data():
-    url = 'https://fxmonitor.online/a/17542800?view=pro&mode=2'
+    url = BOT_CONFIG['fx_monitor']
 
     # # Launch the browser
     browser = await launch()
