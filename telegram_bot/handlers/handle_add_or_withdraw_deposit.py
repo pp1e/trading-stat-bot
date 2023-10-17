@@ -7,7 +7,7 @@ def handle_add_or_withdraw_deposit(chat_id, bot, db_connection, operation_type):
     users = users_rights_table.fetch_user_tags(db_connection=db_connection)
 
     if operation_type == DEPOSIT_ACTION:
-        message = 'Кто пополнил баланс'
+        message = 'Кто пополнил баланс?'
     else:
         message = 'Кто снял деньги?'
 
