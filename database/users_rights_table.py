@@ -1,5 +1,3 @@
-from constants import NONAME_ROLE
-
 
 def create_table(db_connection):
     cursor = db_connection.cursor()
@@ -15,16 +13,6 @@ def create_table(db_connection):
             balance REAL)
             ''')
 
-    db_connection.commit()
-
-
-def add_new_user(db_connection, username):
-    cursor = db_connection.cursor()
-
-    role = NONAME_ROLE
-    balance = 0
-    cursor.execute("INSERT OR IGNORE INTO users_rights (telegram_tag, role, balance) VALUES (?, ?, ?)",
-                   (username, role, balance))
     db_connection.commit()
 
 
