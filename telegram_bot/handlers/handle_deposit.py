@@ -8,7 +8,9 @@ def handle_deposit(message, bot, db_connection, username, user_states, unique_us
     try:
         deposit_amount = float(message.text)
 
-        assert deposit_amount >= 0
+        if deposit_amount < 0:
+            bot.send_message(message.chat.id, "Сумма не может быть отрицательной!")
+            return user_states, unique_user_transaction
 
         save_deposit(
             deposit_amount=deposit_amount,
@@ -26,8 +28,6 @@ def handle_deposit(message, bot, db_connection, username, user_states, unique_us
 
     except ValueError:
         bot.send_message(message.chat.id, "Некорректная сумма. Введите число!")
-    except AssertionError:
-        bot.send_message(message.chat.id, "Сумма не может быть отрицательной!")
 
     return user_states, unique_user_transaction
 
