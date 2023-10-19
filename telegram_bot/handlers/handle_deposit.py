@@ -8,7 +8,9 @@ def handle_deposit(message, bot, db_connection, username, user_states, unique_us
     try:
         deposit_amount = float(message.text)
 
-        handle_deposit_amount(
+        assert deposit_amount >= 0
+
+        save_deposit(
             deposit_amount=deposit_amount,
             chat_id=message.chat.id,
             bot=bot,
@@ -24,31 +26,35 @@ def handle_deposit(message, bot, db_connection, username, user_states, unique_us
 
     except ValueError:
         bot.send_message(message.chat.id, "Некорректная сумма. Введите число!")
+    except AssertionError:
+        bot.send_message(message.chat.id, "Сумма не может быть отрицательной!")
 
     return user_states, unique_user_transaction
 
 
-def handle_deposit_amount(deposit_amount, chat_id, bot, operation_type, db_connection, username_pays):
-    if deposit_amount >= 0:
+def save_deposit(deposit_amount, chat_id, bot, operation_type, db_connection, username_pays):
+    if operation_type == DEPOSIT_ACTION:
+        bot.send_message(chat_id, f"Пользователь {username_pays} "
+                                  f"внес {deposit_amount}USD")
 
-        if operation_type == DEPOSIT_ACTION:
-            bot.send_message(chat_id, f"Пользователь {username_pays} "
-                                              f"внес {deposit_amount}USD")
+        users_rights_table.update_balance(
+            db_connection=db_connection,
+            username_pays=username_pays,
+            amount=deposit_amount
+        )
+    elif operation_type == WITHDRAW_ACTION:
+        bot.send_message(chat_id, f"Пользователь {username_pays} "
+                                  f"снял {deposit_amount}USD")
 
-            users_rights_table.update_balance(
-                db_connection=db_connection,
-                username_pays=username_pays,
-                amount=deposit_amount
-            )
-        elif operation_type == WITHDRAW_ACTION:
-            bot.send_message(chat_id, f"Пользователь {username_pays} "
-                                              f"снял {deposit_amount}USD")
+        users_rights_table.update_balance(
+            db_connection=db_connection,
+            username_pays=username_pays,
+            amount=-deposit_amount
+        )
 
-            users_rights_table.update_balance(
-                db_connection=db_connection,
-                username_pays=username_pays,
-                amount=-deposit_amount
-            )
 
-    else:
-        bot.send_message(chat_id, "Сумма не может быть отрицательной!")
+def send_question_message(bot, chat_id, operation_type, username_pays):
+    if operation_type == DEPOSIT_ACTION:
+        bot.send_message(chat_id, f"На сколько $ пополнил {username_pays}?")
+    elif operation_type == WITHDRAW_ACTION:
+        bot.send_message(chat_id, f"Сколько $ снял {username_pays}?")
