@@ -40,7 +40,6 @@ class TradingStatBot:
                 handle_start_command(
                     message=message,
                     bot=self.bot,
-                    db_connection=self.db_connection,
                     user_states=self.user_states
                 ))
 
