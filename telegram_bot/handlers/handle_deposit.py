@@ -51,10 +51,3 @@ def save_deposit(deposit_amount, chat_id, bot, operation_type, db_connection, us
             username_pays=username_pays,
             amount=-deposit_amount
         )
-
-
-def send_question_message(bot, chat_id, operation_type, username_pays):
-    if operation_type == DEPOSIT_ACTION:
-        bot.send_message(chat_id, f"На сколько $ пополнил {username_pays}?")
-    elif operation_type == WITHDRAW_ACTION:
-        bot.send_message(chat_id, f"Сколько $ снял {username_pays}?")
