@@ -30,7 +30,7 @@ def handle_view_specified_statistic(chat_id, bot, db_connection, week_date):
     if week_stat is None:
         bot.send_message(
             chat_id=chat_id,
-            text="За эту неделю нету статистики 😞"
+            text="За эту неделю нет статистики 😞"
         )
         return
 
