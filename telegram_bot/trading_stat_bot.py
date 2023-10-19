@@ -170,7 +170,8 @@ class TradingStatBot:
                     unique_user_transaction=self.unique_user_transaction
                 ))
 
-        @self.bot.message_handler(func=lambda message: self.user_states.get(message.from_user.username) == SELECT_ACTION)
+        @self.bot.message_handler(
+            func=lambda message: self.user_states.get(message.from_user.username) == SELECT_ACTION)
         @self.admin_required_message
         def echo_message_callback(message):
             self.bot.send_message(message.chat.id, 'Хозяин еще не научил меня этому :(')
