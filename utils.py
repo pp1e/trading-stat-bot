@@ -36,3 +36,10 @@ def get_string_last_week_monday():
 
 def get_last_week_sunday():
     return get_current_week_monday() - datetime.timedelta(days=1)
+
+
+def russian_format_today_date():
+    today = datetime.date.today()
+    today = today.strftime("%d.%m.%Y")
+
+    return today
