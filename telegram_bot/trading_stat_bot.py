@@ -3,7 +3,7 @@ from telegram_bot_calendar import DetailedTelegramCalendar
 
 from config.bot_config import BOT_CONFIG
 
-from constants import DEPOSIT_ACTION, WITHDRAW_ACTION, SELECT_ACTION, WAIT_DEPOSIT
+from constants import DEPOSIT_ACTION, WITHDRAW_ACTION, SELECT_ACTION, WAIT_DOLLAR_DEPOSIT, WAIT_RUBLE_DEPOSIT
 
 from telegram_bot.handlers.handle_start_command import handle_start_command
 from telegram_bot.handlers.handle_week_stat import handle_view_last_statistic, handle_view_specified_statistic
@@ -14,7 +14,7 @@ from telegram_bot.handlers.handle_add_or_withdraw_deposit import handle_add_or_w
 from telegram_bot.handlers.handle_to_start import handle_to_start
 from telegram_bot.handlers.handle_select_user import handle_select_user
 from telegram_bot.handlers.handle_view_user_deposits import handle_view_user_deposits
-from telegram_bot.handlers.handle_deposit import handle_deposit
+from telegram_bot.handlers.handle_deposit import handle_dollar_deposit, handle_ruble_deposit
 from telegram_bot.handlers.handle_average_dollar_price import handle_average_dollar_price
 from telegram_bot.entities.bot_commands import BotCommands
 
@@ -156,11 +156,25 @@ class TradingStatBot:
             )
 
         @self.bot.message_handler(
-            func=lambda message: self.user_states.get(message.from_user.username) == WAIT_DEPOSIT)
+            func=lambda message: self.user_states.get(message.from_user.username) == WAIT_DOLLAR_DEPOSIT)
         @self.admin_required_message
-        def deposit_callback(message):
+        def dollar_deposit_callback(message):
             self.user_states, self.unique_user_transaction = (
-                handle_deposit(
+                handle_dollar_deposit(
+                    message=message,
+                    bot=self.bot,
+                    db_connection=self.db_connection,
+                    username=message.from_user.username,
+                    user_states=self.user_states,
+                    unique_user_transaction=self.unique_user_transaction
+                ))
+
+        @self.bot.message_handler(
+            func=lambda message: self.user_states.get(message.from_user.username) == WAIT_RUBLE_DEPOSIT)
+        @self.admin_required_message
+        def ruble_deposit_callback(message):
+            self.user_states, self.unique_user_transaction = (
+                handle_ruble_deposit(
                     message=message,
                     bot=self.bot,
                     db_connection=self.db_connection,
