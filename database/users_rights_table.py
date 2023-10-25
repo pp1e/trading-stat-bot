@@ -46,8 +46,5 @@ def fetch_user_balances(db_connection):
 
     cursor.execute("SELECT telegram_tag, balance FROM users_rights")
     query_result = cursor.fetchall()
-    result_dict = {}
-    for item in query_result:
-        key, value = item
-        result_dict[key] = value
-    return result_dict
+
+    return query_result

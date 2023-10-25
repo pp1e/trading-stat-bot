@@ -56,7 +56,8 @@ def get_week_statistic(db_connection, week_date=None):
     if week_data is None:
         return None
 
-    user_balances = users_rights_table.fetch_user_balances(db_connection)
+    user_balances = utils.parse_user_balances_to_dict(
+        query_result=users_rights_table.fetch_user_balances(db_connection=db_connection))
     week_number = weeks_stats_table.fetch_week_number(db_connection, week_monday)
 
     return WeekStat(
