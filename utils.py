@@ -43,3 +43,13 @@ def russian_format_today_date():
     today = today.strftime("%d.%m.%Y")
 
     return today
+
+
+def parse_user_balances_to_dict(query_result):
+    result_dict = {}
+
+    for item in query_result:
+        key, value = item
+        result_dict[key] = value
+
+    return result_dict

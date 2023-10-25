@@ -74,7 +74,8 @@ def save_week_stat(db_connection, week_data, user_overall_profits, user_week_pro
 
 
 def get_current_week_profits(db_connection, actual_overall_balance):
-    user_balances = users_rights_table.fetch_user_balances(db_connection)
+    user_balances = utils.parse_user_balances_to_dict(
+        query_result=users_rights_table.fetch_user_balances(db_connection=db_connection))
     last_week_stat = weeks_stats_table.fetch_week_stat(db_connection, utils.get_last_week_monday())
 
     user_overall_profits, user_week_profits = calculate_week_user_profits(
