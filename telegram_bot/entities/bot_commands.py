@@ -11,5 +11,4 @@ class BotCommands(enum.Enum):
     WITHDRAW_MONEY = 'withdraw_money'
     TO_START = 'to_start'
     SELECT_USER = 'select_user'
-    VIEW_USER_DEPOSITS = 'view_user_deposits'
     VIEW_AVERAGE_PURCHASE_DOLLAR_PRICE = 'view_average_purchase_dollar_price'

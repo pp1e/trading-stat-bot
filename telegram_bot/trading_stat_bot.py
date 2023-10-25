@@ -13,7 +13,6 @@ from telegram_bot.handlers.handle_view_statistic_menu import handle_view_statist
 from telegram_bot.handlers.handle_add_or_withdraw_deposit import handle_add_or_withdraw_deposit
 from telegram_bot.handlers.handle_to_start import handle_to_start
 from telegram_bot.handlers.handle_select_user import handle_select_user
-from telegram_bot.handlers.handle_view_user_deposits import handle_view_user_deposits
 from telegram_bot.handlers.handle_deposit import handle_dollar_deposit, handle_ruble_deposit
 from telegram_bot.handlers.handle_average_dollar_price import handle_average_dollar_price
 from telegram_bot.entities.bot_commands import BotCommands
@@ -145,15 +144,6 @@ class TradingStatBot:
                     username=call.from_user.username,
                     unique_user_transaction=self.unique_user_transaction[call.from_user.username]
                 ))
-
-        @self.bot.callback_query_handler(func=lambda call: call.data == BotCommands.VIEW_USER_DEPOSITS.value)
-        @self.admin_required_call
-        def view_user_deposits_callback(call):
-            handle_view_user_deposits(
-                chat_id=call.message.chat.id,
-                bot=self.bot,
-                db_connection=self.db_connection
-            )
 
         @self.bot.message_handler(
             func=lambda message: self.user_states.get(message.from_user.username) == WAIT_DOLLAR_DEPOSIT)

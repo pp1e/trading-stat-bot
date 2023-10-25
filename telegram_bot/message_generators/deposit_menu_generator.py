@@ -8,7 +8,6 @@ def send_user_deposit_menu(bot, chat_id):
         button_parameters={
             'Пополнить баланс': BotCommands.ADD_DEPOSIT.value,
             'Снять деньги': BotCommands.WITHDRAW_MONEY.value,
-            'Посмотреть информацию о балансах': BotCommands.VIEW_USER_DEPOSITS.value,
             'Вернуться назад': BotCommands.TO_START.value
         }
     )
