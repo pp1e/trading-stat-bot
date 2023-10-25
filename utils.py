@@ -53,3 +53,14 @@ def parse_user_balances_to_dict(query_result):
         result_dict[key] = value
 
     return result_dict
+
+
+def parse_user_deposits_to_dict(query_result):
+    result_dict = {}
+
+    for item in query_result:
+        result_dict[item[0]] = {}
+        result_dict[item[0]]['rubles'] = item[1]
+        result_dict[item[0]]['dollars'] = item[2]
+
+    return result_dict
