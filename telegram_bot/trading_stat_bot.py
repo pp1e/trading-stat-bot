@@ -14,7 +14,7 @@ from telegram_bot.handlers.handle_add_or_withdraw_deposit import handle_add_or_w
 from telegram_bot.handlers.handle_to_start import handle_to_start
 from telegram_bot.handlers.handle_select_user import handle_select_user
 from telegram_bot.handlers.handle_deposit import handle_dollar_deposit, handle_ruble_deposit
-from telegram_bot.handlers.handle_average_dollar_price import handle_average_dollar_price
+from telegram_bot.handlers.handle_deposit_statistic import handle_deposit_statistic
 from telegram_bot.entities.bot_commands import BotCommands
 
 from telegram_bot.access_decorators import admin_message_required_factory, admin_call_required_factory
@@ -113,10 +113,10 @@ class TradingStatBot:
             )
 
         @self.bot.callback_query_handler(
-            func=lambda call: call.data == BotCommands.VIEW_AVERAGE_PURCHASE_DOLLAR_PRICE.value)
+            func=lambda call: call.data == BotCommands.VIEW_DEPOSIT_STATISTIC.value)
         @self.admin_required_call
-        def view_average_dollar_price(call):
-            handle_average_dollar_price(
+        def deposit_statistic_callback(call):
+            handle_deposit_statistic(
                 bot=self.bot,
                 chat_id=call.message.chat.id,
                 db_connection=self.db_connection

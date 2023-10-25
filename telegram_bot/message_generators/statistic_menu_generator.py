@@ -8,7 +8,7 @@ def send_user_statistic_menu(bot, chat_id):
         button_parameters={
             'Актуальная статистика': BotCommands.VIEW_ACTUAL_STATISTIC.value,
             'Статистика за выбранную неделю': BotCommands.VIEW_SPECIFIED_STATISTIC.value,
-            'Средняя цена закупки доллара': BotCommands.VIEW_AVERAGE_PURCHASE_DOLLAR_PRICE.value,
+            'Статистика по депозитам': BotCommands.VIEW_DEPOSIT_STATISTIC.value,
             'Вернуться назад': BotCommands.TO_START.value
         }
     )
