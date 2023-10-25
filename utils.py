@@ -48,9 +48,9 @@ def russian_format_today_date():
 def parse_user_balances_to_dict(query_result):
     result_dict = {}
 
-    for item in query_result:
-        key, value = item
-        result_dict[key] = value
+    for user_balance in query_result:
+        username, balance = user_balance
+        result_dict[username] = balance
 
     return result_dict
 
@@ -58,9 +58,13 @@ def parse_user_balances_to_dict(query_result):
 def parse_user_deposits_to_dict(query_result):
     result_dict = {}
 
-    for item in query_result:
-        result_dict[item[0]] = {}
-        result_dict[item[0]]['rubles'] = item[1]
-        result_dict[item[0]]['dollars'] = item[2]
+    for user_deposit in query_result:
+        username = user_deposit[0]
+        ruble_deposit = user_deposit[1]
+        dollar_deposit = user_deposit[2]
+
+        result_dict[username] = {}
+        result_dict[username]['rubles'] = ruble_deposit
+        result_dict[username]['dollars'] = dollar_deposit
 
     return result_dict
